@@ -1,6 +1,6 @@
-##BTS Agent System
-##Author: Peiwei Wu
-##This is a repository used to store BTS Agent System for Computer-Design-Competition-2026.
+## BTS Agent System
+## Author: Peiwei Wu
+## This is a repository used to store BTS Agent System for Computer-Design-Competition-2026.
 
 ## Git 常用命令速查（本地 ↔ GitHub）
 
