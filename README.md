@@ -24,7 +24,7 @@ git pull
 
 4) 提交并推送（把本地改动上传到 GitHub）
 4.1 暂存（选择一种）
-只提交某个文件：
+只提交某个文件：0
 git add README.md
 提交所有改动（常用）：
 git add .
