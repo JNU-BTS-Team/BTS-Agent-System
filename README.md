@@ -20,7 +20,7 @@ git remote -v
 
 3) 从 GitHub 拉取最新代码（更新到本地）
 git pull
-建议：每次开始写代码前先 git pull，避免冲突。
+建议：每次开始写代码前先 git pull，避免冲突。0
 
 4) 提交并推送（把本地改动上传到 GitHub）
 4.1 暂存（选择一种）
