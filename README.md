@@ -1,10 +1,10 @@
-## BTS Agent System
+# BTS Agent System
 
-Author: Peiwei Wu
+### Author: Peiwei Wu
 
 This is a repository used to store BTS Agent System for Computer-Design-Competition-2026.
 
-## Git 常用命令速查（本地 ↔ GitHub）
+### Git 常用命令速查（本地 ↔ GitHub）
 
 > 进入项目目录后再执行下面命令：
 ```bash
