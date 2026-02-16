@@ -1,3 +1,3 @@
 BTS Agent System
-
-This is a repository used to store BTS Agent System for Computer-Design-Competition-2026.
+---Author: Peiwei Wu
+---This is a repository used to store BTS Agent System for Computer-Design-Competition-2026.
