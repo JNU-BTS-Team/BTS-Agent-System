@@ -18,7 +18,7 @@ git remote -v
 
 2) 查看当前分支 & 远程仓库地址
 git branch
-git remote -v 
+git branch -a
 
 3) 从 GitHub 拉取最新代码（更新到本地）
 git pull
@@ -57,13 +57,34 @@ git restore .
 7) 典型日常流程（推荐）
 从GitHub更新拉取代码：
 git pull
-开发修改代码…
+或者
+git fetch upstream # 从主仓库同步更新
+git merge upstream/main
 
-查看状态：
+查看git状态：
 git status
-暂存 + 提交 + 推送：
+暂存(add) + 提交(commit) + 推送(push)
 
-推送代码：
+标准工作推送代码流程：
+🟢 日常开发
 git add .
-git commit -m "feat: xxxx"
-git push
+git commit -m "你的更新说明"
+git push origin main
+
+🔵 同步主仓库更新（非常重要）
+git fetch upstream
+git merge upstream/main
+# 这两和合并＝git pull
+或者更干净：
+git fetch upstream
+git rebase upstream/main
+git push origin main
+
+
+
+### PS:
+origin   → "自己的账号名"/BTS-Agent-System
+upstream → BTS-JNU/BTS-Agent-System
+工作流程：
+先在自己的仓库里面更改，推送到origin，改完稳定后再推送/pull_request到upstream，每次更新同步要从upstream中提取
+pull_request：拉取请求，将自己的代码上传到总的仓库中请求合并
