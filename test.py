@@ -1,3 +1,5 @@
+# 使用密钥SSH连接远程服务器: https://www.cnblogs.com/zhujingzhi/p/9686208.html
+
 import paramiko
  
 # 实例化SSHClient
