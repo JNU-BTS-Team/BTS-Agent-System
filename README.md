@@ -13,6 +13,8 @@ cd "F:\Undergraduate_Competitions\Computer_Design_Competition\code\BTS_Agent_Sys
 1) 查看当前状态（最常用）
 git status
 看哪些文件被修改/新增、是否已暂存、当前在哪个分支。
+git remote -v
+看目前已经连接成功的远程仓库
 
 2) 查看当前分支 & 远程仓库地址
 git branch
