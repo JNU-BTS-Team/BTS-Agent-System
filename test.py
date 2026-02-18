@@ -1,23 +1,34 @@
 # 使用密钥SSH连接远程服务器: https://www.cnblogs.com/zhujingzhi/p/9686208.html
 
 import paramiko
- 
-# 实例化SSHClient
-client = paramiko.SSHClient()
 
-# 自动添加策略，保存服务器的主机名和密钥信息，如果不添加，那么不再本地know_hosts文件中记录的主机将无法连接
-client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
- 
-# 连接SSH服务器，用户名密码认证
-client.connect(hostname='117.50.179.58', port=22, username='ubuntu', password='wpw242512')
- 
-# 打开一个Chanent并执行命令
-stdin, stdout, stderr = client.exec_command('df -h') # stdout 为正确输出，stderr为错误输出，同时是有1个变量有值
-print(stdout.read().decode('utf8')) # 打印结果 
+client = paramiko.SSHClient() # 实例化SSHClient
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # 自动添加策略，保存服务器的主机名和密钥信息，如果不添加，那么不再本地know_hosts文件中记录的主机将无法连接
 
-# 打开一个Chanent并执行命令
-stdin, stdout, stderr = client.exec_command('nvidia-smi') # stdout 为正确输出，stderr为错误输出，同时是有1个变量有值
-print(stdout.read().decode('utf8')) # 打印结果
+client.connect(
+    hostname='117.50.179.58',
+    port=22,
+    username='ubuntu',
+    password='wpw242512'
+)
 
-# 关闭连接
-client.close()
+# 激活conda环境并且运行远程脚本
+command = """
+source /home/ubuntu/miniconda3/etc/profile.d/conda.sh &&
+conda activate PeiweiWu_env &&
+cd /data/WPW/BTS-Agent-Sys/BTS &&
+python main.py
+"""
+# command = 'nvidia-smi'
+
+stdin, stdout, stderr = client.exec_command(command)
+
+# 打印标准输出
+print("STDOUT:")
+print(stdout.read().decode('utf8'))
+
+# 打印错误输出
+print("STDERR:")
+print(stderr.read().decode('utf8'))
+
+client.close() # 关闭连接
