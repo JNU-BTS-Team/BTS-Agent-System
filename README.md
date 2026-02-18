@@ -87,5 +87,3 @@ upstream → BTS-JNU/BTS-Agent-System
 工作流程：
 先在自己的仓库里面更改，推送到origin，改完稳定后再推送/pull_request到upstream，每次更新同步要从upstream中提取
 pull_request：拉取请求，将自己的代码上传到总的仓库中请求合并
-
-这是更新的一句话
