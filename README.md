@@ -4,7 +4,7 @@
 
 This is a repository used to store BTS Agent System for Computer-Design-Competition-2026.
 
-### Git 常用命令速查（本地 ↔ GitHub）
+### Chapter1 Git 常用命令速查（本地 ↔ GitHub）
 
 > 进入项目目录后再执行下面命令：
 ```bash
@@ -81,9 +81,110 @@ git rebase upstream/main
 git push origin main
 
 
-### PS:
-origin   → "自己的GitHub账号名"/BTS-Agent-System
-upstream → BTS-JNU/BTS-Agent-System
-工作流程：
-先在自己的仓库里面更改，推送到origin，改完稳定后再推送/pull_request到upstream，每次更新同步要从upstream中提取
-pull_request：拉取请求，将自己的代码上传到总的仓库中请求合并
+
+### Chapter2 三种仓库 & 各自分支结构 重要！！！！！！！
+
+# ===============================
+# 1️⃣ 组织远程仓库（upstream）
+# ===============================
+# 位置：BTS-JNU/BTS-Agent-System
+# 作用：团队最终代码
+
+upstream/main    # 稳定版本（发布）
+upstream/dev     # 团队开发分支
+
+
+# ===============================
+# 2️⃣ 个人远程仓库（origin）
+# ===============================
+# 位置：自己的GitHub账号/BTS-Agent-System
+# 作用：个人开发中转站
+
+origin/main          # 与 upstream/main 同步
+origin/dev           # 与 upstream/dev 同步
+origin/feature-xxx   # 个人功能分支
+
+
+# ===============================
+# 3️⃣ 个人本地仓库（Local）
+# ===============================
+# 位置：自己电脑
+# 作用：实际写代码的地方
+
+main                 # 本地主分支
+dev                  # 本地开发分支
+feature-xxx          # 本地功能分支
+
+
+
+### Chapter3 团队协作标准流程（Fork + dev 分支） 非常重要！！！！！！！
+
+## 结构说明
+- upstream = 组织远程仓库
+- origin = 个人远程仓库
+- dev = 团队开发分支
+- feature = 个人功能分支
+
+# ===============================
+# 0、首先点一下fork到自己的个人仓库中
+# ===============================
+
+
+# ===============================
+# 一、开始开发前（同步 dev）
+# ===============================
+
+# 1. 切换到本地 dev 分支
+git checkout dev
+
+# 2. 从组织仓库下载最新代码（不修改当前代码）
+git fetch upstream
+
+# 3. 合并组织仓库的 dev 到本地 dev
+git merge upstream/dev
+
+# 4. 将更新后的 dev 推送到个人仓库
+git push origin dev
+
+# 5. 创建个人功能分支（不要在 dev 上直接开发）
+git checkout -b feature-xxx
+
+
+# ===============================
+# 二、开发完成后
+# ===============================
+
+# 6. 添加修改
+git add . # 作用在当前所在分支/个人本地仓库 （git branch可知）
+
+# 7. 提交到本地功能分支
+git commit -m "中文说明" # 作用在当前所在分支/个人本地仓库 （git branch可知）
+
+# 8. 推送到个人仓库
+git push origin feature-xxx # 作用在当前分支/个人本地仓库 → 远程对应分支/个人远程仓库
+
+# 9. 在 GitHub 发起 PR：
+#    feature-xxx  →  upstream/dev
+
+
+# ===============================
+# 三、PR 合并成功后
+# ===============================
+
+# 10. 切回本地 dev
+git checkout dev
+
+# 11. 同步组织仓库最新 dev
+git fetch upstream
+git merge upstream/dev
+
+# 12. 更新个人仓库 dev
+git push origin dev
+
+# 13. 删除本地功能分支
+git branch -d feature-xxx
+
+# 14. 删除远程功能分支
+git push origin --delete feature-xxx
+
+
