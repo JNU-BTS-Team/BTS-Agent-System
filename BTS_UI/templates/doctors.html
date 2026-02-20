@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肿瘤病例管理系统 - 医生管理</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="{{ url_for('main_interface') }}" class="navbar-brand">肿瘤病例管理系统</a>
+        <ul class="navbar-nav">
+            <li><a href="{{ url_for('main_interface') }}">主界面</a></li>
+            <li><a href="{{ url_for('patients') }}">病人管理</a></li>
+            {% if current_user.role == 'admin' %}
+                <li><a href="{{ url_for('doctors') }}">医生管理</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout') }}">退出登录</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="management-card">
+            <h1>医生管理</h1>
+            <a href="{{ url_for('add_doctor') }}" class="btn btn-primary mb-3">添加新医生</a>
+            
+            <!-- 搜索表单 -->
+            <form method="GET" action="{{ url_for('doctors') }}" class="mb-3">
+                <div class="search-container">
+                    <input type="text" name="search" placeholder="按医生ID搜索" value="{{ search_keyword }}">
+                    <button type="submit" class="btn btn-search">搜索</button>
+                </div>
+            </form>
+            
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>医生ID</th>
+                            <th>用户名</th>
+                            <th>真实姓名</th>
+                            <th>科室</th>
+                            <th>职称</th>
+                            <th>联系电话</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in doctors %}
+                        <tr>
+                            <td>{{ doctor.id }}</td>
+                            <td>{{ doctor.username }}</td>
+                            <td>{{ doctor.real_name }}</td>
+                            <td>{{ doctor.department }}</td>
+                            <td>{{ doctor.title }}</td>
+                            <td>{{ doctor.phone }}</td>
+                            <td>
+                                {% if current_user.role == 'admin' %}
+                                    <a href="{{ url_for('edit_doctor', doctor_id=doctor.id) }}" class="btn btn-edit btn-sm">修改</a>
+                                    <form method="POST" action="{{ url_for('delete_doctor', doctor_id=doctor.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除这个医生吗？')">删除</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

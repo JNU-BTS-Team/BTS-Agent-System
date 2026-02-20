@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肿瘤病例管理系统 - 病人管理</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script>
+        // 页面加载完成后检查是否有重复姓名的病人
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if has_duplicate_names and search_keyword and patients|length > 1 %}
+                // 创建选择对话框
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 20px;
+                    border: 1px solid #ccc;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+                    z-index: 1000;
+                    max-width: 400px;
+                    width: 90%;
+                    border-radius: 5px;
+                `;
+                
+                dialog.innerHTML = `
+                    <h3>请选择您要查看的病人</h3>
+                    <p>发现多个名为"{{ search_keyword }}"的病人：</p>
+                    <ul style="list-style: none; padding: 0; margin: 15px 0;">
+                        {% for patient in patients %}
+                            <li style="margin: 8px 0;">
+                                <button onclick="window.location.href='{{ url_for('diagnoses', patient_id=patient.id) }}'; this.parentNode.parentNode.remove();" 
+                                        style="width: 100%; padding: 10px; text-align: left; border: 1px solid #ddd; border-radius: 3px; background: white; cursor: pointer;">
+                                    {{ patient.name }} (ID: {{ patient.patient_id[-4:] }}, 性别: {{ patient.gender }}, 年龄: {{ patient.age }})
+                                </button>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <button onclick="this.parentNode.remove();" 
+                            style="width: 100%; padding: 8px; margin-top: 10px; border: 1px solid #ccc; border-radius: 3px; background: #f0f0f0; cursor: pointer;">
+                        取消
+                    </button>
+                `;
+                
+                document.body.appendChild(dialog);
+            {% endif %}
+        });
+    </script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="{{ url_for('main_interface') }}" class="navbar-brand">肿瘤病例管理系统</a>
+        <ul class="navbar-nav">
+            <li><a href="{{ url_for('main_interface') }}">主界面</a></li>
+            <li><a href="{{ url_for('patients') }}">病人管理</a></li>
+            {% if current_user.role == 'admin' %}
+                <li><a href="{{ url_for('doctors') }}">医生管理</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout') }}">退出登录</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="management-card">
+            <h1>病人管理</h1>
+            <a href="{{ url_for('add_patient') }}" class="btn btn-primary mb-3">添加新病人</a>
+            
+            <!-- 搜索表单 -->
+            <form method="GET" action="{{ url_for('patients') }}" class="mb-3">
+                <div class="search-container">
+                    <input type="text" name="search" placeholder="按姓名搜索病人" value="{{ search_keyword }}">
+                    <button type="submit" class="btn btn-search">搜索</button>
+                </div>
+            </form>
+            
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>病人ID</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>年龄</th>
+                            <th>创建日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                        <tr>
+                            <td>{{ patient.patient_id[-4:] }}</td>
+                            <td>{{ patient.name }}</td>
+                            <td>{{ patient.gender }}</td>
+                            <td>{{ patient.age }}</td>
+                            <td>{{ patient.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('diagnoses', patient_id=patient.id) }}" class="btn btn-view btn-sm">查看诊断</a>
+                                {% if current_user.role == 'admin' %}
+                                    <a href="{{ url_for('edit_patient', patient_id=patient.id) }}" class="btn btn-edit btn-sm">修改</a>
+                                    <form method="POST" action="{{ url_for('delete_patient', patient_id=patient.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除这个病人吗？')">删除</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肿瘤病例管理系统 - 添加诊断记录</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="{{ url_for('main_interface') }}" class="navbar-brand">肿瘤病例管理系统</a>
+        <ul class="navbar-nav">
+            <li><a href="{{ url_for('main_interface') }}">主界面</a></li>
+            <li><a href="{{ url_for('patients') }}">病人管理</a></li>
+            {% if current_user.role == 'admin' %}
+                <li><a href="{{ url_for('doctors') }}">医生管理</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout') }}">退出登录</a></li>
+        </ul>
+    </nav>
+    
+    <div class="dashboard-container">
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="form-container">
+            <h2>添加诊断记录</h2>
+            <div class="patient-info">
+                <h3>{{ patient.name }}</h3>
+                <p>性别：{{ patient.gender }} | 年龄：{{ patient.age }} | 病人编号：{{ patient.patient_id }}</p>
+            </div>
+            <form method="POST">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="diagnosis_type">诊断类型</label>
+                        <select id="diagnosis_type" name="diagnosis_type" required>
+                            <option value="">请选择诊断类型</option>
+                            <option value="CT">CT扫描</option>
+                            <option value="MRI">MRI扫描</option>
+                            <option value="病理诊断">病理诊断</option>
+                            <option value="血液检查">血液检查</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group col-md-6">
+                        <label for="tumor_type">肿瘤类型</label>
+                        <input type="text" id="tumor_type" name="tumor_type" placeholder="如：乳腺癌、肺癌等">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="tumor_stage">肿瘤分期</label>
+                        <select id="tumor_stage" name="tumor_stage">
+                            <option value="">请选择分期</option>
+                            <option value="I期">I期</option>
+                            <option value="II期">II期</option>
+                            <option value="III期">III期</option>
+                            <option value="IV期">IV期</option>
+                            <option value="未分期">未分期</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group col-md-6">
+                        <label for="diagnosis_date">诊断日期</label>
+                        <input type="date" id="diagnosis_date" name="diagnosis_date" value="{{ today }}" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="diagnosis_content">诊断详细内容</label>
+                    <textarea id="diagnosis_content" name="diagnosis_content" rows="8" placeholder="请输入详细诊断内容" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="treatment_plan">治疗方案建议</label>
+                    <textarea id="treatment_plan" name="treatment_plan" rows="4" placeholder="请输入推荐的治疗方案"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="examination_results">检查结果摘要</label>
+                    <textarea id="examination_results" name="examination_results" rows="4" placeholder="请输入重要检查结果摘要"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">注意事项</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="请输入治疗或随访注意事项"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{{ url_for('diagnoses', patient_id=patient.id) }}" class="btn btn-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary">添加诊断</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

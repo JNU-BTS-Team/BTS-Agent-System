@@ -1,0 +1,784 @@
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* 登录页面样式 */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e0f7fa 0%, #b3e5fc 100%); /* 更淡的蓝色背景 */
+    padding: 20px;
+}
+
+.login-container h1 {
+    color: #1565c0;
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 40px;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-form {
+    background: rgba(255, 255, 255, 0.98);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 450px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background-color: #f9fafb;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: white;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* 搜索功能样式 */
+.search-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-container input[type="text"] {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    width: 300px;
+}
+
+.search-container input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.search-container .btn-search {
+    padding: 12px 16px;
+    background-color: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 300px;
+    text-align: center;
+}
+
+.search-container .btn-search:hover {
+    background-color: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* 上传和查看图片按钮布局 */
+.upload-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* 删除按钮容器样式 */
+.diagnosis-actions {
+    padding-bottom: 20px;
+    margin-top: 15px;
+}
+
+/* 调整小按钮的样式 */
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/* 诊断记录标题部分样式 */
+.diagnosis-header {
+    margin-bottom: 20px;
+}
+
+.diagnosis-header h3 {
+    font-size: 24px; /* 放大诊断记录标题字体 */
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.diagnosis-header p {
+    font-size: 18px; /* 放大诊断日期和医生信息字体 */
+    color: #555;
+    margin: 0;
+}
+
+/* 诊断记录页面 */
+.diagnoses-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.diagnoses-title {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.add-diagnosis-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
+}
+
+.add-diagnosis-btn:hover {
+    background-color: #218838;
+}
+
+/* 诊断记录（病历单样式） */
+.diagnosis-records {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.diagnosis-sheet {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.diagnosis-sheet:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #4CAF50;
+    margin-bottom: 20px;
+}
+
+.sheet-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.sheet-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.record-id, .record-date {
+    font-weight: 500;
+}
+
+.sheet-content {
+    margin-bottom: 20px;
+}
+
+.diagnosis-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.info-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.info-label {
+    min-width: 120px;
+    font-weight: 600;
+    color: #34495e;
+    background-color: #f8f9fa;
+    padding: 8px 10px;
+    border-radius: 4px;
+    align-self: flex-start;
+}
+
+.info-value {
+    flex: 1;
+    padding: 8px 10px;
+    color: #2c3e50;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    min-height: 36px;
+    align-self: flex-start;
+}
+
+.info-value.full-width {
+    flex: 1;
+    padding: 8px 10px;
+    color: #2c3e50;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    min-height: 36px;
+    align-self: flex-start;
+}
+
+.sheet-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.doctor-info {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.sheet-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* 添加诊断记录按钮和诊断记录列表之间的分隔线 */
+.page-header {
+    margin-bottom: 30px;
+    padding: 0 30px 20px 30px; /* 左右内边距与表格容器一致 */
+    border-bottom: 2px solid #e0e0e0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 病人信息和添加按钮之间的间距 */
+.page-header .patient-info {
+    margin-bottom: 20px;
+}
+
+/* 添加诊断记录按钮样式 */
+.page-header .btn-primary {
+    width: 100%;
+    max-width: 200px; /* 限制按钮最大宽度 */
+    display: block;
+    margin-bottom: 20px;
+}
+
+/* 放大删除诊断记录按钮 */
+.btn-danger {
+    padding: 12px 24px;
+    font-size: 16px;
+}
+
+.btn-primary {
+    background-color: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* 导航栏样式 */
+.navbar {
+    background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+    color: white;
+    padding: 18px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-brand {
+    font-size: 24px;
+    font-weight: 700;
+    text-decoration: none;
+    color: white;
+}
+
+.navbar-nav {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+}
+
+.navbar-nav a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar-nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 仪表盘样式 */
+.dashboard-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 主容器样式 */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+/* 页面标题样式 */
+h1 {
+    color: #1e293b;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #3b82f6;
+    display: inline-block;
+}
+
+/* 管理页面卡片样式 */
+.management-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.management-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.welcome-section {
+    margin-bottom: 30px;
+}
+
+/* 第一行统计卡片：三个卡片并排 */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.stat-card p {
+    font-size: 36px;
+    font-weight: 700;
+    color: #333;
+}
+
+/* 第二行：本月诊断数和图表 */
+.second-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.second-row .stat-card.monthly-diagnoses {
+    flex: 0 0 25%;
+}
+
+.chart-container {
+    flex: 1;
+    height: 300px;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 18px;
+}
+
+/* 快速操作按钮样式 */
+.quick-actions {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    justify-content: center;
+}
+
+.quick-actions .btn {
+    flex: 0 0 auto;
+    min-width: 300px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    /* 响应式统计卡片 */
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    /* 响应式第二行布局 */
+    .second-row {
+        flex-direction: column;
+    }
+    
+    .second-row .stat-card.monthly-diagnoses {
+        flex: 1;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+/* 表格样式 */
+.table-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin-bottom: 30px;
+    border: 1px solid #e0e0e0;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th,
+.table-container td {
+    padding: 20px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.table-container th {
+    background-color: #f8fafc;
+    font-weight: 700;
+    color: #334155;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table-container tr {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table-container tr:hover {
+    background-color: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.table-container tr:last-child td {
+    border-bottom: none;
+}
+
+/* 诊断记录详情 */
+.diagnosis-details {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #007bff;
+}
+
+.diagnosis-details .detail-item {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.diagnosis-details .detail-item:last-child {
+    margin-bottom: 0;
+}
+
+/* 诊断内容区域 */
+.diagnosis-content {
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.diagnosis-content h4 {
+    margin-bottom: 10px;
+    color: #555;
+    font-size: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+/* 诊断各部分区块 */
+.diagnosis-section {
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.diagnosis-section h4 {
+    margin-bottom: 10px;
+    color: #555;
+    font-size: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+/* 诊断操作按钮容器 */
+.diagnosis-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* 按钮组样式 */
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* 表单样式 */
+.form-container {
+    background: white;
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    max-width: 600px;
+    margin: 0 auto;
+    border: 1px solid #e2e8f0;
+}
+
+.form-container h2 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 24px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* 消息提示样式 */
+.flashes {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.flashes li {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.flashes .success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flashes .danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.flashes .info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* 图片展示样式 */
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.image-item {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 10px;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.image-item img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.image-item p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .navbar-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
