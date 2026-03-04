@@ -45,7 +45,8 @@ def main():
     pages = [
         ('主界面', '/main_interface'),
         ('病人管理', '/patients'),
-        ('医生管理', '/doctors')
+        ('医生管理', '/doctors'),
+        ('远程测试', '/remote_test')
     ]
     
     success_count = 0
@@ -54,6 +55,14 @@ def main():
     for page_name, page_url in pages:
         if test_page_access(cookies, page_name, page_url):
             success_count += 1
+
+    # 简单测试 upload_nii 接口：不带文件或类型应该返回错误
+    print('测试上传接口返回错误信息...')
+    response = requests.post(f'{base_url}/upload_nii', cookies=cookies)
+    if response.status_code == 200 and '请至少选择一种类型' in response.text:
+        print('✓ upload_nii基础验证通过')
+    else:
+        print(f'✗ upload_nii基础验证失败，状态码: {response.status_code}, 响应: {response.text}')
     
     print('=' * 50)
     print(f'测试完成: {success_count}/{total_count} 页面访问成功')

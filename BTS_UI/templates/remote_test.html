@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}远程服务器测试{% endblock %}
+
+{% block content %}
+    <div class="test-container">
+        <h1 class="mb-5">远程服务器测试</h1>
+
+        <!-- 上半部分：上传数据 -->
+        <div class="upload-section mb-5 text-left p-4 border rounded" style="margin-bottom:3rem;">
+            <h3 class="mb-3">上传 .nii 文件</h3>
+            <div id="typeSelection" class="mb-2">
+                <label class="mr-3"><input type="checkbox" name="types" value="FLAIR"> FLAIR</label>
+                <label class="mr-3"><input type="checkbox" name="types" value="T1"> T1</label>
+                <label class="mr-3"><input type="checkbox" name="types" value="T1ce"> T1ce</label>
+                <label class="mr-3"><input type="checkbox" name="types" value="T2"> T2</label>
+                <label class="mr-3"><input type="checkbox" name="types" value="T2"> GT</label>
+            </div>
+            <div id="dropZone" class="drop-zone mb-2 position-relative">
+                <p class="mb-1">
+                    <span class="drop-text">拖放文件到此处或点击选择</span>
+                </p>
+                <input type="file" id="niiFiles" name="nii_files" multiple accept=".nii" style="display:none;" />
+                <div id="fileList" class="mt-2 text-muted"></div>
+                <div id="uploadMsg" class="upload-msg"></div>
+            </div>
+            <button id="uploadBtn" class="btn btn-secondary" disabled>开始上传</button>
+            <span id="uploadStatus" class="ml-3"></span>
+        </div>
+
+        <!-- 下半部分：运行测试与结果 -->
+        <div class="test-section p-4 border rounded" style="margin-top:3rem;">
+            <form method="POST" action="{{ url_for('remote_test') }}" class="mb-5" style="margin-bottom:2rem;">
+                <button type="submit" class="btn btn-primary btn-lg px-5 py-3" id="testBtn" disabled>开始测试</button>
+                <span id="statusLabel" class="status-label display-6 ml-4">{{ status }}</span>
+            </form>
+            <div class="row two-col">
+                <div class="col-6">
+                    <textarea id="outputBox" class="form-control" rows="8" readonly>{{ output }}</textarea>
+                </div>
+                <div class="col-6">
+                    {% if image_url %}
+                        <img src="{{ image_url }}" alt="远程结果" class="img-fluid border" />
+                    {% else %}
+                        <div class="img-placeholder border">
+                            <span class="text-muted">图像结果将在此显示</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 点击按钮前先修改状态文本
+        document.getElementById('testBtn').addEventListener('click', function(){
+            document.getElementById('statusLabel').innerText = '运行中';
+        });
+
+        // 上传逻辑相关
+        const checkboxes = document.querySelectorAll('#typeSelection input[type=checkbox]');
+        const dropZone = document.getElementById('dropZone');
+        const niiInput = document.getElementById('niiFiles');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadMsg = document.getElementById('uploadMsg');
+        const uploadStatus = document.getElementById('uploadStatus');
+        let uploadDone = false;
+        // 存储已选择的文件（追加模式）
+        let selectedFiles = [];
+
+        function updateUploadState() {
+            const selCount = document.querySelectorAll('#typeSelection input[type=checkbox]:checked').length;
+            const fileCount = selectedFiles.length;
+            uploadMsg.textContent = '';
+            if (selCount === 0) {
+                uploadMsg.textContent = '请至少选择一种类型';
+            }
+            if (fileCount > 0) {
+                if (fileCount < selCount) {
+                    uploadMsg.textContent = '请继续输入文件';
+                } else if (fileCount > selCount) {
+                    uploadMsg.textContent = '当前上传文件数目过多';
+                }
+            }
+            uploadBtn.disabled = !(selCount > 0 && fileCount === selCount);
+            // 如果用户改变了选择，在重新上传前取消测试权限
+            if (!uploadBtn.disabled) {
+                uploadStatus.textContent = '';
+            }
+            if (!uploadDone) {
+                document.getElementById('testBtn').disabled = true;
+            }
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', () => {
+            uploadDone = false;
+            updateUploadState();
+        }));
+
+        dropZone.addEventListener('click', () => niiInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const dt = e.dataTransfer;
+            if (dt && dt.files) {
+                for (let i = 0; i < dt.files.length; i++) {
+                    const f = dt.files[i];
+                    if (!selectedFiles.some(sf => sf.name === f.name)) {
+                        selectedFiles.push(f);
+                    }
+                }
+                updateUploadState();
+                renderFileList();
+                niiInput.value = ''; // 重置输入以允许重复选择
+            }
+        });
+
+        niiInput.addEventListener('change', () => {
+            uploadDone = false;
+            // 加入新选择的文件
+            for (let i = 0; i < niiInput.files.length; i++) {
+                const f = niiInput.files[i];
+                if (!selectedFiles.some(sf => sf.name === f.name)) {
+                    selectedFiles.push(f);
+                }
+            }
+            updateUploadState();
+            renderFileList();
+            niiInput.value = '';
+        });
+
+        function renderFileList() {
+            const listDiv = document.getElementById('fileList');
+            listDiv.textContent = '';
+            selectedFiles.forEach((f, idx) => {
+                const item = document.createElement('div');
+                const sizeKB = (f.size / 1024).toFixed(1);
+                item.textContent = `${idx + 1}. ${f.name} (${sizeKB} KB)`;
+                listDiv.appendChild(item);
+            });
+        }
+
+        uploadBtn.addEventListener('click', () => {
+            const formData = new FormData();
+            document.querySelectorAll('#typeSelection input[type=checkbox]:checked').forEach(cb => formData.append('types', cb.value));
+            selectedFiles.forEach(f => formData.append('nii_files', f));
+            uploadStatus.textContent = '上传中...';
+            uploadStatus.className = '';
+            fetch("{{ url_for('upload_nii') }}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.success) {
+                    uploadStatus.textContent = data.message;
+                    uploadStatus.className = 'text-success';
+                    uploadDone = true;
+                    document.getElementById('testBtn').disabled = false;
+                } else {
+                    uploadStatus.textContent = data.message;
+                    uploadStatus.className = 'text-danger';
+                    document.getElementById('testBtn').disabled = true;
+                }
+            })
+            .catch(err => {
+                uploadStatus.textContent = '上传失败';
+                uploadStatus.className = 'text-danger';
+                document.getElementById('testBtn').disabled = true;
+            });
+        });
+    </script>
+
+    <style>
+        /* 让输出框自带滚动 */
+        #outputBox {
+            white-space: pre-wrap; /* 保留换行 */
+            width: 100%;
+            min-height: 300px;
+            max-width: 100%;
+        }
+        .img-placeholder {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            border: 2px dashed #6c757d;
+        }
+        .status-label {
+            display: inline-block;
+            margin-left: 20px;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        .test-container {
+            max-width: 1000px;
+            margin: 80px auto;
+            text-align: center;
+        }
+        /* 进一步增加按钮和框之间间距 */
+        .test-container form {
+            display: inline-block;
+        }
+        /* 让测试内容更宽松 */
+        .test-container h1 {
+            font-size: 2.5rem;
+        }
+        /* 上传区样式 */
+        .drop-zone {
+            position: relative; /* make message absolute relative to this box */
+            padding: 20px;
+            text-align: center;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            border: 2px dashed #007bff;
+        }
+        .drop-zone .drop-text {
+            color: #007bff;
+            text-decoration: underline;
+        }
+        .drop-zone.drag-over {
+            background-color: #e2e6ea;
+            border-color: #0056b3;
+        }
+        /* 上传信息位置与样式 */
+        .upload-msg {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            color: #dc3545; /* bootstrap danger red */
+            font-style: italic;
+        }
+        /* 强制两列并排，增加间距 */
+        .row.two-col {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 20px; /* 列之间留空隙 */
+            justify-content: center;
+        }
+        .row.two-col > .col-6 {
+            flex: 0 0 calc(50% - 10px); /* 减去一半 gap 保持各占 50% */
+            max-width: calc(50% - 10px);
+        }
+        /* 右侧图片缩小限制 */
+        .row.two-col img {
+            max-width: 100%;
+            max-height: 300px; /* 调整这里可以改变图像高度 */
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+{% endblock %}

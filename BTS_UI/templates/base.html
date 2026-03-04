@@ -15,17 +15,23 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="{{ url_for('main_interface') }}">主界面 <span class="sr-only">(current)</span></a>
+                <li class="nav-item {% if request.endpoint=='main_interface' %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('main_interface') }}">主界面 {% if request.endpoint=='main_interface' %}<span class="sr-only">(current)</span>{% endif %}</a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item {% if request.endpoint=='patients' %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('patients') }}">病人管理</a>
                 </li>
                 {% if current_user.role == 'admin' %}
-                <li class="nav-item">
+                <li class="nav-item {% if request.endpoint=='doctors' %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('doctors') }}">医生管理</a>
                 </li>
                 {% endif %}
+                <li class="nav-item {% if request.endpoint=='todos' %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('todos') }}">今日待办</a>
+                </li>
+                <li class="nav-item {% if request.endpoint=='remote_test' %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('remote_test') }}">测试功能</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('logout') }}">退出登录</a>
                 </li>

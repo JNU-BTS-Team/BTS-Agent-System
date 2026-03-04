@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import mysql.connector
 import hashlib
 import os
 import uuid
 from datetime import datetime
+import paramiko  # 用于SSH远程执行
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # 用于会话管理的密钥
@@ -647,6 +648,127 @@ def view_images(diagnosis_id):
         db.close()
         
         return render_template('view_images.html', diagnosis=diagnosis, images=[])
+
+# 上传nii文件路由
+@app.route('/upload_nii', methods=['POST'])
+@login_required
+def upload_nii():
+    # 接受前端传来的类型选择和文件
+    selected = request.form.getlist('types')
+    files = request.files.getlist('nii_files')
+    sel_count = len(selected)
+    file_count = len(files)
+    # 至少要选择一种类型
+    if sel_count == 0:
+        return jsonify(success=False, message="请至少选择一种类型")
+    # 文件数必须与选择的类型数一致
+    if file_count != sel_count:
+        if file_count < sel_count:
+            return jsonify(success=False, message="请继续输入文件")
+        else:
+            return jsonify(success=False, message="当前上传文件数目过多")
+    # 传到远程目录
+    try:
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(
+            hostname='117.50.179.58',
+            port=22,
+            username='ubuntu',
+            password='wpw242512'
+        )
+        sftp = client.open_sftp()
+        remote_dir = '/data/WPW/BTS-Agent-Sys/BTS/Uploads/Brats18_TCIA01_1_1/'
+        # 确保远程目录存在，如果需要可以创建，但是这里假设已经存在
+        for f in files:
+            # f 是一个 FileStorage 对象，直接从流中上传
+            remote_path = remote_dir + f.filename
+            try:
+                f.stream.seek(0)
+            except Exception:
+                pass
+            sftp.putfo(f.stream, remote_path)
+        sftp.close()
+        client.close()
+        return jsonify(success=True, message="上传成功")
+    except Exception as e:
+        return jsonify(success=False, message=f"上传失败: {str(e)}")
+
+# 远程测试路由
+@app.route('/remote_test', methods=['GET', 'POST'])
+@login_required
+def remote_test():
+    status = "未运行"
+    output = ""
+    image_url = None
+    if request.method == 'POST':
+        # 点击按钮后，由前端JS立即设置为运行中，后台开始执行
+        status = "运行中"
+        try:
+            # 参考 test.py 中的逻辑
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(
+                hostname='117.50.179.58',
+                port=22,
+                username='ubuntu',
+                password='wpw242512'
+            )
+
+            # 在运行之前检查远程Uploads目录是否有文件
+            try:
+                sftp_check = client.open_sftp()
+                remote_upload_dir = '/data/WPW/BTS-Agent-Sys/BTS/Uploads/Brats18_TCIA01_1_1/'
+                files_list = sftp_check.listdir(remote_upload_dir)
+                if not files_list:
+                    status = "未运行"
+                    output = "远程Uploads目录没有nii文件，请先上传"
+                    sftp_check.close()
+                    client.close()
+                    return render_template('remote_test.html', status=status, output=output, image_url=image_url)
+                sftp_check.close()
+            except Exception:
+                # 如果目录不存在或其他问题，也继续执行命令，留给后续步骤处理
+                pass
+
+            command = """
+                source /home/ubuntu/miniconda3/etc/profile.d/conda.sh &&
+                conda activate PeiweiWu_env &&
+                cd /data/WPW/BTS-Agent-Sys/BTS/MMCFormer-main/ &&
+                python Valide.py
+            """
+
+            stdin, stdout, stderr = client.exec_command(command)
+            out = stdout.read().decode('utf8')
+            err = stderr.read().decode('utf8')
+
+            # 尝试获取远程生成的图片
+            try:
+                sftp = client.open_sftp()
+                remote_path = '/data/WPW/BTS-Agent-Sys/BTS/MMCFormer-main/Downloads_SegGraph/seg_gt.png'
+                local_name = f'remote_result_{uuid.uuid4().hex}.png'
+                # 保存到 flask 静态文件夹
+                local_path = os.path.join(app.static_folder, local_name)
+                sftp.get(remote_path, local_path)
+                sftp.close()
+                # 将本地路径转换为 url（静态文件夹）
+                image_url = url_for('static', filename=local_name)
+            except Exception as img_err:
+                # 如果获取失败则忽略，仅保留文本输出
+                print(f"获取远程图片失败: {img_err}")
+
+            client.close()
+
+            if err:
+                status = "未知错误"
+                output = f"STDOUT:\n{out}\nSTDERR:\n{err}"
+            else:
+                status = "运行完毕"
+                output = f"STDOUT:\n{out}"
+        except Exception as e:
+            status = "未知错误"
+            output = str(e)
+    return render_template('remote_test.html', status=status, output=output, image_url=image_url)
 
 # 待办任务路由
 @app.route('/todos')
