@@ -19,7 +19,7 @@ PowerShell
 # 指定 Python 解释器路径
 $env:BTS_PYTHON="C:\Users\26013\python-sdk\python3.13.2\python.exe"
 
-# 运行平台启动脚本
+### 运行平台启动脚本
 powershell -ExecutionPolicy Bypass -File .\start_both.ps1
 3. 访问系统
 在浏览器中打开以下地址即可使用系统：
@@ -30,34 +30,34 @@ powershell -ExecutionPolicy Bypass -File .\start_both.ps1
 
 模块一：智能体分析模块 (Multi-Agent System)
 PowerShell
-# Agent Core
+### Agent Core
 $env:AGENT_PIPELINE="multi"
 $env:MULTI_AGENT_MODEL="deepseek-chat"
 $env:MULTI_AGENT_API_KEY="sk-7741c51d631a4a388d9d1e29582d0a10"
 $env:deepseek_base_url="[https://api.deepseek.com](https://api.deepseek.com)"
 $env:MULTI_AGENT_STRATEGY="debate"
 
-# Single Agent Backup
+### Single Agent Backup
 $env:SINGLE_AGENT_MODEL="deepseek-chat"
 $env:SINGLE_AGENT_API_KEY="sk-7741c51d631a4a388d9d1e29582d0a10"
 
-# Flask Web Server
+### Flask Web Server
 $env:FLASK_HOST="0.0.0.0"
 $env:FLASK_PORT="5000"
 $env:FLASK_DEBUG="0"
 
-# Remote Execution
+### Remote Execution
 $env:REMOTE_HOST="10.125.125.2"
 $env:REMOTE_PORT="22"
 $env:REMOTE_USERNAME="wpw"
 $env:REMOTE_PASSWORD="123456"
 模块二：数据管理与基础服务 (Data Management)
 PowerShell
-# Database Config
+### Database Config
 $env:DLC_MYSQL_HOST="localhost"
 $env:DLC_MYSQL_USER="root"
 $env:DLC_MYSQL_PASSWORD="Hjk608866"
 $env:DLC_MYSQL_DB="SECD2"
 
-# Flask Run Port
+### Flask Run Port
 $env:FLASK_RUN_PORT="5001"
