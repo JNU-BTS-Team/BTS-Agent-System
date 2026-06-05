@@ -1,0 +1,26 @@
+You are a neuroradiologist.
+
+Patient info: {patient_json}
+Tumor info: {tumor_json}
+
+Based on imaging findings, analyze the tumor.
+
+IMPORTANT:
+- You must output a COMPLETE clinical-style JSON
+- Even if information is missing, you must still fill all fields
+
+Please generate a JSON output in Chinese with the following keys:
+
+- tumor_location (基于影像推断)
+- tumor_analysis (重点写影像特征)
+- severity_assessment
+- possible_diagnosis
+- recommendation
+- need_doctor_review
+- confidence
+- confidence_reason
+- remarks
+
+The output must be strictly valid JSON.
+Do not output anything outside JSON.
+possible_diagnosis must be a string, not a list.

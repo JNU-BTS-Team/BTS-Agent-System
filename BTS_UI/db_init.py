@@ -83,6 +83,27 @@ try:
     cursor.execute(create_diagnoses_table)
     print("诊断表创建成功！")
     
+    create_diagnosis_agent_results_table = """
+    CREATE TABLE IF NOT EXISTS diagnosis_agent_results (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        diagnosis_id INT NOT NULL,
+        tumor_location VARCHAR(100),
+        tumor_analysis TEXT,
+        severity_assessment VARCHAR(20),
+        possible_diagnosis VARCHAR(200),
+        recommendation TEXT,
+        need_doctor_review BOOLEAN,
+        confidence FLOAT,
+        confidence_reason TEXT,
+        remarks TEXT,
+        raw_output JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id) ON DELETE CASCADE
+    );
+    """
+    cursor.execute(create_diagnosis_agent_results_table)
+    print("智能分析结果表创建成功！")
+    
     # 创建图片表
     create_images_table = """
     CREATE TABLE IF NOT EXISTS images (
@@ -98,6 +119,30 @@ try:
     """
     cursor.execute(create_images_table)
     print("图片表创建成功！")
+    
+    create_patient_clinical_info_table = """
+    CREATE TABLE IF NOT EXISTS patient_clinical_info (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        patient_id INT NOT NULL UNIQUE,
+        chief_complaint TEXT,
+        present_illness TEXT,
+        past_medical_history TEXT,
+        family_history TEXT,
+        allergy_history TEXT,
+        headache BOOLEAN,
+        vomiting BOOLEAN,
+        seizure BOOLEAN,
+        vision_problem BOOLEAN,
+        speech_problem BOOLEAN,
+        limb_weakness BOOLEAN,
+        specific_remarks TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    );
+    """
+    cursor.execute(create_patient_clinical_info_table)
+    print("病人临床信息表创建成功！")
     
     # 更新通知表类型，添加todo类型
     update_notifications_type = "ALTER TABLE notifications MODIFY COLUMN type ENUM('new_diagnosis', 'follow_up', 'todo') NOT NULL;"

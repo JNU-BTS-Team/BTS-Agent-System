@@ -1,0 +1,10 @@
+<div style="width:1920px;height:1080px;position:relative;background:#050b1a;color:#eaf7ff;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;">
+  <div style="max-width:980px;padding:22px 26px;border:1px solid rgba(103,255,255,0.55);border-radius:14px;background:rgba(3,12,49,0.55);box-shadow:0 0 20px rgba(20,128,240,0.25) inset;">
+    <div style="font-size:22px;font-weight:700;color:#67ffff;margin-bottom:10px;">测试1：未找到图一的导出内容</div>
+    <div style="font-size:14px;line-height:1.6;opacity:0.9;">
+      请把图一对应的 Figma 导出 HTML 内容粘贴到文件：<br>
+      <b>BTS-Agent-System/BTS_UI/ui/test1.txt</b><br><br>
+      建议只粘贴最外层的 <code>&lt;div ...&gt;...&lt;/div&gt;</code>（1920×1080 那个），不要包含 <code>&lt;html&gt;</code>/<code>&lt;head&gt;</code>/<code>&lt;body&gt;</code>。
+    </div>
+  </div>
+</div>

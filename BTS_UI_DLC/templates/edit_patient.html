@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肿瘤病例管理系统 - 修改病人信息</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="{{ url_for('main_interface') }}" class="navbar-brand">肿瘤病例管理系统</a>
+        <ul class="navbar-nav">
+            <li><a href="{{ url_for('main_interface') }}">主界面</a></li>
+            <li><a href="{{ url_for('patients') }}">病人管理</a></li>
+            {% if current_user.role == 'admin' %}
+                <li><a href="{{ url_for('doctors') }}">医生管理</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout') }}">退出登录</a></li>
+        </ul>
+    </nav>
+    
+    <div class="dashboard-container">
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="page-header">
+            <h1>修改病人信息</h1>
+            <a href="{{ url_for('patients') }}" class="btn btn-secondary">返回病人列表</a>
+        </div>
+        
+        <!-- 修改病人表单 -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('edit_patient', patient_id=patient.id) }}">
+                <div class="form-group">
+                    <label for="patient_id">病人ID</label>
+                    <input type="text" id="patient_id" name="patient_id" value="{{ patient.patient_id }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">姓名</label>
+                    <input type="text" id="name" name="name" value="{{ patient.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="gender">性别</label>
+                    <select id="gender" name="gender" required>
+                        <option value="男" {% if patient.gender == '男' %}selected{% endif %}>男</option>
+                        <option value="女" {% if patient.gender == '女' %}selected{% endif %}>女</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="age">年龄</label>
+                    <input type="number" id="age" name="age" value="{{ patient.age }}" required min="0" max="120">
+                </div>
+                
+                <div class="form-group">
+                    <label for="birthday">生日</label>
+                    <input type="date" id="birthday" name="birthday" value="{{ patient.birthday.strftime('%Y-%m-%d') if patient.birthday else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">联系电话</label>
+                    <input type="text" id="phone" name="phone" value="{{ patient.phone if patient.phone else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">地址</label>
+                    <textarea id="address" name="address" rows="3">{{ patient.address if patient.address else '' }}</textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                    <a href="{{ url_for('patients') }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

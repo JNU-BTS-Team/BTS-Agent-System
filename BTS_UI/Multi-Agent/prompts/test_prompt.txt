@@ -1,0 +1,11 @@
+You are a medical AI assistant.
+
+Patient case data:
+
+{data}
+
+Please analyze:
+
+1. Possible tumor characteristics
+2. Potential risk level
+3. Suggested clinical attention

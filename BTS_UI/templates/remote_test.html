@@ -5,6 +5,12 @@
 {% block content %}
     <div class="test-container">
         <h1 class="mb-5">远程服务器测试</h1>
+        {% if diagnosis_id and case_id %}
+            <div class="mb-4 text-left">
+                <div class="text-muted">诊断ID：{{ diagnosis_id }}</div>
+                <div class="text-muted">CASE_ID：{{ case_id }}</div>
+            </div>
+        {% endif %}
 
         <!-- 上半部分：上传数据 -->
         <div class="upload-section mb-5 text-left p-4 border rounded" style="margin-bottom:3rem;">
@@ -30,7 +36,10 @@
 
         <!-- 下半部分：运行测试与结果 -->
         <div class="test-section p-4 border rounded" style="margin-top:3rem;">
-            <form method="POST" action="{{ url_for('remote_test') }}" class="mb-5" style="margin-bottom:2rem;">
+            <form method="POST" action="{{ url_for('remote_test', diagnosis_id=diagnosis_id) if diagnosis_id else url_for('remote_test') }}" class="mb-5" style="margin-bottom:2rem;">
+                {% if diagnosis_id %}
+                    <input type="hidden" name="diagnosis_id" value="{{ diagnosis_id }}">
+                {% endif %}
                 <button type="submit" class="btn btn-primary btn-lg px-5 py-3" id="testBtn" disabled>开始测试</button>
                 <span id="statusLabel" class="status-label display-6 ml-4">{{ status }}</span>
             </form>
@@ -151,6 +160,9 @@
             const formData = new FormData();
             document.querySelectorAll('#typeSelection input[type=checkbox]:checked').forEach(cb => formData.append('types', cb.value));
             selectedFiles.forEach(f => formData.append('nii_files', f));
+            {% if diagnosis_id %}
+            formData.append('diagnosis_id', '{{ diagnosis_id }}');
+            {% endif %}
             uploadStatus.textContent = '上传中...';
             uploadStatus.className = '';
             fetch("{{ url_for('upload_nii') }}", {

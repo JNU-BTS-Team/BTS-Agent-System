@@ -1,0 +1,29 @@
+{
+  "tumor_segmentation": {
+    "file_type": "nii",
+    "shape": [240, 240, 155]
+  },
+  "labels": {
+    "0": "background",
+    "1": "NCR/NET",
+    "2": "ED",
+    "4": "ET"
+  },
+  "ncr_net_voxel_count": 0,
+  "ed_voxel_count": 0,
+  "et_voxel_count": 0,
+  "tumor_voxel_count": 0,
+  "ncr_net_voxel_percentage": 0,
+  "ed_voxel_percentage": 0,
+  "et_voxel_percentage": 0,
+  "has_ncr_net": false,
+  "has_ed": false,
+  "has_et": false,
+  "tumor_relative_position": {
+    "center_voxel": [0, 0, 0],
+    "center_normalized": [0.0, 0.0, 0.0],
+    "left_right": "unknown",
+    "anterior_posterior": "unknown",
+    "superior_inferior": "unknown"
+  }
+}

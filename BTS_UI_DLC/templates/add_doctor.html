@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肿瘤病例管理系统 - 添加医生</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="{{ url_for('main_interface') }}" class="navbar-brand">肿瘤病例管理系统</a>
+        <ul class="navbar-nav">
+            <li><a href="{{ url_for('main_interface') }}">主界面</a></li>
+            <li><a href="{{ url_for('patients') }}">病人管理</a></li>
+            <li><a href="{{ url_for('doctors') }}">医生管理</a></li>
+            <li><a href="{{ url_for('logout') }}">退出登录</a></li>
+        </ul>
+    </nav>
+    
+    <div class="dashboard-container">
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="page-header">
+            <h1>添加新医生</h1>
+            <a href="{{ url_for('doctors') }}" class="btn btn-secondary">返回医生列表</a>
+        </div>
+        
+        <!-- 添加医生表单 -->
+        <div class="form-container">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="real_name">真实姓名</label>
+                    <input type="text" id="real_name" name="real_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="department">科室</label>
+                    <input type="text" id="department" name="department" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">职称</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">联系电话</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">添加医生</button>
+                    <a href="{{ url_for('doctors') }}" class="btn btn-danger">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

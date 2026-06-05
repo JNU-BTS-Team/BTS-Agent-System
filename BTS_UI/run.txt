@@ -1,0 +1,18 @@
+1:
+先设置环境变量：
+PowerShell:
+$env:deepseek_api_key="你的 DeepSeek Key"
+
+然后执行：
+python single_agent_pipeline.py --input_json 你的病例.json --seg_json 你的分割结果.json --model deepseek-chat --output_json output_case.json
+
+2:
+python single_agent_pipeline.py --input_json 你的病例.json --seg_json 你的分割结果.json --model deepseek-chat --api_key 你的 DeepSeek Key
+or
+python single_agent_pipeline.py --input_json 你的病例.json --seg_json 你的分割结果.json --model deepseek-reasoner --api_key
+
+这里如果想切换agent模型只需要修改--model和--api_key对应参数即可
+
+如果运行时出现 Client.__init__() got an unexpected keyword argument 'proxies'，
+说明 openai==1.14.2 与 httpx 版本不兼容，请执行：
+python -m pip install "httpx<0.27"
