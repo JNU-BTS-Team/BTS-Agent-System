@@ -12,52 +12,61 @@
 3. **验证登录**：在终端执行以下命令，输入密码后显示 `welcome` 即为正常：
    ```bash
    mysql -u root -p
-2. 环境配置与系统运行
-在项目根目录终端执行以下命令（以 PowerShell 为例）：
+   ```
 
-PowerShell
-### 指定 Python 解释器路径
+### 2. 环境配置与系统运行
+在项目根目录终端执行以下命令（以 PowerShell 为例）：
+```powershell
+# 指定 Python 解释器路径
 $env:BTS_PYTHON="C:\Users\26013\python-sdk\python3.13.2\python.exe"
 
-### 运行平台启动脚本
+# 运行平台启动脚本
 powershell -ExecutionPolicy Bypass -File .\start_both.ps1
-3. 访问系统
-在浏览器中打开以下地址即可使用系统：
-🔗 http://127.0.0.1:5000/login
+```
 
-⚙️ 环境变量配置参考
+### 3. 访问系统
+在浏览器中打开以下地址即可使用系统：
+🔗 [http://127.0.0.1:5000/login](http://127.0.0.1:5000/login)
+
+---
+
+## ⚙️ 环境变量配置参考
+
 在部署或调试时，需确保以下环境变量配置正确：
 
-模块一：智能体分析模块 (Multi-Agent System)
-PowerShell
-### Agent Core
+### 模块一：智能体分析模块 (Multi-Agent System)
+```powershell
+# Agent Core
 $env:AGENT_PIPELINE="multi"
 $env:MULTI_AGENT_MODEL="deepseek-chat"
 $env:MULTI_AGENT_API_KEY="sk-7741c51d631a4a388d9d1e29582d0a10"
 $env:deepseek_base_url="[https://api.deepseek.com](https://api.deepseek.com)"
 $env:MULTI_AGENT_STRATEGY="debate"
 
-### Single Agent Backup
+# Single Agent Backup
 $env:SINGLE_AGENT_MODEL="deepseek-chat"
 $env:SINGLE_AGENT_API_KEY="sk-7741c51d631a4a388d9d1e29582d0a10"
 
-### Flask Web Server
+# Flask Web Server
 $env:FLASK_HOST="0.0.0.0"
 $env:FLASK_PORT="5000"
 $env:FLASK_DEBUG="0"
 
-### Remote Execution
+# Remote Execution
 $env:REMOTE_HOST="10.125.125.2"
 $env:REMOTE_PORT="22"
 $env:REMOTE_USERNAME="wpw"
 $env:REMOTE_PASSWORD="123456"
-模块二：数据管理与基础服务 (Data Management)
-PowerShell
-### Database Config
+```
+
+### 模块二：数据管理与基础服务 (Data Management)
+```powershell
+# Database Config
 $env:DLC_MYSQL_HOST="localhost"
 $env:DLC_MYSQL_USER="root"
 $env:DLC_MYSQL_PASSWORD="Hjk608866"
 $env:DLC_MYSQL_DB="SECD2"
 
-### Flask Run Port
+# Flask Run Port
 $env:FLASK_RUN_PORT="5001"
+```
