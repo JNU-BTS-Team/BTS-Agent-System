@@ -16,7 +16,7 @@
 在项目根目录终端执行以下命令（以 PowerShell 为例）：
 
 PowerShell
-# 指定 Python 解释器路径
+### 指定 Python 解释器路径
 $env:BTS_PYTHON="C:\Users\26013\python-sdk\python3.13.2\python.exe"
 
 ### 运行平台启动脚本
