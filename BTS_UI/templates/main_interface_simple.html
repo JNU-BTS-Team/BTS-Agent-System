@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肿瘤病例管理系统 - 主界面</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body { background:#000511; color:#EAF7FF; font-family: "Microsoft YaHei", Arial, sans-serif; }
+        .wrap { max-width: 1100px; margin: 28px auto; padding: 0 18px; }
+        .title { font-size: 22px; font-weight: 700; margin-bottom: 14px; }
+        .sub { opacity: 0.8; margin-bottom: 18px; }
+        .grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+        .card { background: rgba(3,12,49,0.55); border: 1px solid rgba(20,128,240,0.35); border-radius: 12px; padding: 14px; }
+        .k { font-size: 13px; opacity: 0.85; }
+        .v { font-size: 28px; font-weight: 800; margin-top: 6px; color:#67FFFF; }
+        .actions { margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:10px; text-decoration:none; color:#EAF7FF; border:1px solid rgba(103,255,255,0.55); background: rgba(103,255,255,0.12); }
+        .btn:hover { background: rgba(103,255,255,0.18); }
+        .err { margin-top: 14px; font-size: 12px; opacity: 0.8; }
+        @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="title">主界面（简化模式）</div>
+        <div class="sub">用于在主界面模板渲染失败时保证首页可用。</div>
+        <div class="grid">
+            <div class="card"><div class="k">总病人数</div><div class="v">{{ total_patients }}</div></div>
+            <div class="card"><div class="k">总诊断数</div><div class="v">{{ total_diagnoses }}</div></div>
+            <div class="card"><div class="k">总图片数</div><div class="v">{{ total_images }}</div></div>
+            <div class="card"><div class="k">本月诊断数</div><div class="v">{{ monthly_diagnoses }}</div></div>
+        </div>
+        <div class="actions">
+            <a class="btn" href="{{ url_for('patients') }}">病人中心</a>
+            <a class="btn" href="{{ url_for('doctors') }}">医生中心</a>
+            <a class="btn" href="{{ url_for('todos') }}">待办任务</a>
+            <a class="btn" href="{{ url_for('patient_portal') }}">态势大屏</a>
+            <a class="btn" href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+        {% if error %}
+        <div class="err">主界面渲染错误：{{ error }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>

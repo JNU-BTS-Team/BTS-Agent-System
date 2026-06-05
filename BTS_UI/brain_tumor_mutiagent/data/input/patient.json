@@ -1,0 +1,23 @@
+{
+  "patient_info": {
+    "name": "None",
+    "age": 0,
+    "gender": "male"
+  },
+  "medical_history": {
+    "chief_complaint": "None",
+    "present_illness": "None",
+    "past_medical_history": "None",
+    "family_history": "None",
+    "allergy_history": "None"
+  },
+  "symptoms": {
+    "headache": false,
+    "vomiting": false,
+    "seizure": false,
+    "vision_problem": false,
+    "speech_problem": false,
+    "limb_weakness": false,
+    "specific_remarks": "None"
+  }
+}

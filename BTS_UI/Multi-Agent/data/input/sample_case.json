@@ -1,0 +1,10 @@
+{
+    "patient_age": 54,
+    "gender": "male",
+    "symptoms": [
+        "headache",
+        "blurred vision"
+    ],
+    "tumor_location": "left temporal lobe",
+    "tumor_size_cm": 3.2
+}

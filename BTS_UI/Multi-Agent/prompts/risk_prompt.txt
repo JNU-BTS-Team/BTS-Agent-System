@@ -1,0 +1,26 @@
+You are a clinical risk assessment expert.
+
+Patient info: {patient_json}
+Tumor info: {tumor_json}
+
+Based on clinical and tumor information, evaluate risk.
+
+IMPORTANT:
+- You must output a COMPLETE clinical-style JSON
+- Focus on severity_assessment, risk level, urgency
+
+Please generate a JSON output in Chinese with the following keys:
+
+- tumor_location
+- tumor_analysis
+- severity_assessment (重点)
+- possible_diagnosis
+- recommendation
+- need_doctor_review
+- confidence
+- confidence_reason
+- remarks
+
+The output must be strictly valid JSON.
+Do not output anything outside JSON.
+possible_diagnosis must be a string, not a list.
