@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>肿瘤病例管理系统 - 添加诊断记录</title>
+    <title>肿瘤病例管理系统 - {% if is_edit %}编辑诊断记录{% else %}添加诊断记录{% endif %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
@@ -33,7 +33,7 @@
         {% endwith %}
         
         <div class="form-container">
-            <h2>添加诊断记录</h2>
+            <h2>{% if is_edit %}编辑诊断记录{% else %}添加诊断记录{% endif %}</h2>
             <div class="patient-info">
                 <h3>{{ patient.name }}</h3>
                 <p>性别：{{ patient.gender }} | 年龄：{{ patient.age }} | 病人编号：{{ patient.patient_id }}</p>
@@ -44,17 +44,17 @@
                         <label for="diagnosis_type">诊断类型</label>
                         <select id="diagnosis_type" name="diagnosis_type" required>
                             <option value="">请选择诊断类型</option>
-                            <option value="CT">CT扫描</option>
-                            <option value="MRI">MRI扫描</option>
-                            <option value="病理诊断">病理诊断</option>
-                            <option value="血液检查">血液检查</option>
-                            <option value="其他">其他</option>
+                            <option value="CT" {% if diagnosis and diagnosis.diagnosis_type == 'CT' %}selected{% endif %}>CT扫描</option>
+                            <option value="MRI" {% if diagnosis and diagnosis.diagnosis_type == 'MRI' %}selected{% endif %}>MRI扫描</option>
+                            <option value="病理诊断" {% if diagnosis and diagnosis.diagnosis_type == '病理诊断' %}selected{% endif %}>病理诊断</option>
+                            <option value="血液检查" {% if diagnosis and diagnosis.diagnosis_type == '血液检查' %}selected{% endif %}>血液检查</option>
+                            <option value="其他" {% if diagnosis and diagnosis.diagnosis_type == '其他' %}selected{% endif %}>其他</option>
                         </select>
                     </div>
                     
                     <div class="form-group col-md-6">
                         <label for="tumor_type">肿瘤类型</label>
-                        <input type="text" id="tumor_type" name="tumor_type" placeholder="如：乳腺癌、肺癌等">
+                        <input type="text" id="tumor_type" name="tumor_type" placeholder="如：乳腺癌、肺癌等" value="{{ diagnosis.tumor_type if diagnosis else '' }}">
                     </div>
                 </div>
                 
@@ -63,43 +63,44 @@
                         <label for="tumor_stage">肿瘤分期</label>
                         <select id="tumor_stage" name="tumor_stage">
                             <option value="">请选择分期</option>
-                            <option value="I期">I期</option>
-                            <option value="II期">II期</option>
-                            <option value="III期">III期</option>
-                            <option value="IV期">IV期</option>
-                            <option value="未分期">未分期</option>
+                            <option value="I期" {% if diagnosis and diagnosis.tumor_stage == 'I期' %}selected{% endif %}>I期</option>
+                            <option value="II期" {% if diagnosis and diagnosis.tumor_stage == 'II期' %}selected{% endif %}>II期</option>
+                            <option value="III期" {% if diagnosis and diagnosis.tumor_stage == 'III期' %}selected{% endif %}>III期</option>
+                            <option value="IV期" {% if diagnosis and diagnosis.tumor_stage == 'IV期' %}selected{% endif %}>IV期</option>
+                            <option value="未分期" {% if diagnosis and diagnosis.tumor_stage == '未分期' %}selected{% endif %}>未分期</option>
                         </select>
                     </div>
                     
                     <div class="form-group col-md-6">
                         <label for="diagnosis_date">诊断日期</label>
-                        <input type="date" id="diagnosis_date" name="diagnosis_date" value="{{ today }}" required>
+                        <input type="date" id="diagnosis_date" name="diagnosis_date" value="{% if diagnosis %}{{ diagnosis.diagnosis_date }}{% else %}{{
+                            today }}{% endif %}" required>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="diagnosis_content">诊断详细内容</label>
-                    <textarea id="diagnosis_content" name="diagnosis_content" rows="8" placeholder="请输入详细诊断内容" required></textarea>
+                    <textarea id="diagnosis_content" name="diagnosis_content" rows="8" placeholder="请输入详细诊断内容" required>{{ diagnosis.diagnosis_content if diagnosis else '' }}</textarea>
                 </div>
                 
                 <div class="form-group">
                     <label for="treatment_plan">治疗方案建议</label>
-                    <textarea id="treatment_plan" name="treatment_plan" rows="4" placeholder="请输入推荐的治疗方案"></textarea>
+                    <textarea id="treatment_plan" name="treatment_plan" rows="4" placeholder="请输入推荐的治疗方案">{{ diagnosis.treatment_plan if diagnosis else '' }}</textarea>
                 </div>
                 
                 <div class="form-group">
                     <label for="examination_results">检查结果摘要</label>
-                    <textarea id="examination_results" name="examination_results" rows="4" placeholder="请输入重要检查结果摘要"></textarea>
+                    <textarea id="examination_results" name="examination_results" rows="4" placeholder="请输入重要检查结果摘要">{{ diagnosis.examination_results if diagnosis else '' }}</textarea>
                 </div>
                 
                 <div class="form-group">
                     <label for="notes">注意事项</label>
-                    <textarea id="notes" name="notes" rows="3" placeholder="请输入治疗或随访注意事项"></textarea>
+                    <textarea id="notes" name="notes" rows="3" placeholder="请输入治疗或随访注意事项">{{ diagnosis.notes if diagnosis else '' }}</textarea>
                 </div>
                 
                 <div class="form-actions">
                     <a href="{{ url_for('diagnoses', patient_id=patient.id) }}" class="btn btn-secondary">取消</a>
-                    <button type="submit" class="btn btn-primary">添加诊断</button>
+                    <button type="submit" class="btn btn-primary">{% if is_edit %}保存修改{% else %}添加诊断{% endif %}</button>
                 </div>
             </form>
         </div>

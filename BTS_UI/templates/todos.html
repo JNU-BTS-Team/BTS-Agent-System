@@ -80,13 +80,21 @@
                                         {% endif %}
                                     </div>
                                     
-                                    {% if not todo.is_completed and current_user.id == todo.assignee_id %}
-                                        <form method="POST" action="{{ url_for('complete_todo', todo_id=todo.id) }}">
-                                            <button type="submit" class="btn btn-sm btn-success">标记完成</button>
-                                        </form>
-                                    {% elif todo.is_completed %}
-                                        <span class="text-sm text-muted">完成于: {{ todo.completed_at.strftime('%Y-%m-%d %H:%M') if todo.completed_at else '未知' }}</span>
-                                    {% endif %}
+                                    <div class="d-flex align-items-center">
+                                        {% if not todo.is_completed and current_user.id == todo.assignee_id %}
+                                            <form method="POST" action="{{ url_for('complete_todo', todo_id=todo.id) }}" class="mr-2">
+                                                <button type="submit" class="btn btn-sm btn-success">标记完成</button>
+                                            </form>
+                                        {% elif todo.is_completed %}
+                                            <span class="text-sm text-muted mr-3">完成于: {{ todo.completed_at.strftime('%Y-%m-%d %H:%M') if todo.completed_at else '未知' }}</span>
+                                        {% endif %}
+                                        
+                                        {% if current_user.role == 'admin' %}
+                                            <form method="POST" action="{{ url_for('delete_todo', todo_id=todo.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">删除任务</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>

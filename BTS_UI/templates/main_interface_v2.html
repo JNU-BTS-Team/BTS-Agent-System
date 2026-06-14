@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肿瘤病例管理系统 - 主界面</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap');
+
+        :root {
+            --tech-primary: #00a8ff;
+            --tech-highlight: #00e5ff;
+            --tech-bg-dark: #000511; /* 深空黑 */
+            --tech-bg-darker: #00030a;
+            --tech-text: #ffffff;
+        }
+
+        /* ================= 优化动效区域 ================= */
+        
+        /* 中间卡片弧形进度条流动 */
+        @keyframes arcSweepFlow {
+            0% { filter: drop-shadow(0 0 2px #00e5ff); }
+            50% { filter: drop-shadow(0 0 8px #00e5ff) brightness(1.5); }
+            100% { filter: drop-shadow(0 0 2px #00e5ff); }
+        }
+        
+        /* 1. 外层圆环 4 个定位圆点呼吸闪烁 */
+        @keyframes pointBreathe {
+            0% { opacity: 1; filter: brightness(1); }
+            50% { opacity: 0.6; filter: brightness(0.6); }
+            100% { opacity: 1; filter: brightness(1); }
+        }
+        
+        /* 2. 中间进度环扫光动效 */
+        @keyframes sweepLight {
+            0% { clip-path: polygon(50% 50%, 50% 0%, 50% 0%, 50% 0%); }
+            100% { clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%); }
+        }
+        
+        /* 3. 顶层圆环缓慢旋转 */
+        @keyframes slowRotate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* 4. 白色扇形扫描线 (雷达核心扫描) */
+        @keyframes radarSweepCore {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .tech-radar-core-sweep {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transform-origin: center center;
+            background: conic-gradient(from 0deg, rgba(255,255,255,0.8) 0deg, transparent 40deg);
+            animation: radarSweepCore 10s linear infinite;
+            z-index: 10;
+            pointer-events: none;
+            filter: blur(2px);
+            mix-blend-mode: overlay;
+        }
+
+        /* 5. 中心文字动效 */
+        @keyframes textBreatheScale {
+            0% { text-shadow: 0 0 2px #ffff00; transform: translate(-50%, -50%) scale(1); }
+            50% { text-shadow: 0 0 10px #ffff00; transform: translate(-50%, -50%) scale(1.05); }
+            100% { text-shadow: 0 0 2px #ffff00; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes statusFloatGlow {
+            0%, 100% { transform: translate(-50%, -50%); text-shadow: 0 0 3px #00e5ff; opacity: 1; }
+            50% { transform: translate(-50%, calc(-50% - 2px)); text-shadow: 0 0 8px #00e5ff; opacity: 1; }
+            95% { opacity: 1; }
+            98% { opacity: 0; }
+        }
+
+        /* 6. 背景缓慢斜向漂移 */
+        @keyframes gridSlowDrift {
+            0% { background-position: 0 0; }
+            100% { background-position: -20px -20px; }
+        }
+        .tech-hud-background {
+            animation: gridSlowDrift 100s linear infinite !important;
+        }
+
+        /* 7. 进度环容器配置 */
+        .tech-progress-ring-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            z-index: 5;
+            mask-image: radial-gradient(transparent 65%, black 66%);
+            -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
+            animation: sweepLight 2s ease-out forwards;
+        }
+        .tech-progress-ring-fill {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--tech-highlight) 0%, var(--tech-primary) 96%, transparent 96%);
+        }
+        
+        body.figma-home {
+            background: var(--tech-bg-dark);
+            overflow: hidden;
+            position: relative;
+        }
+        .figma-missing {
+            position: absolute;
+            left: 18px;
+            top: 18px;
+            z-index: 10;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 120, 210, 0.55);
+            background: rgba(3, 12, 49, 0.72);
+            color: #fff;
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 560px;
+        }
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #uiViewport {
+            position: fixed;
+            inset: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            z-index: 1;
+        }
+        #uiSpacer {
+            position: relative;
+            margin: 0 auto;
+        }
+        #uiStage {
+            width: 1920px;
+            position: absolute;
+            left: 0;
+            top: 50px;
+            transform-origin: 0 0;
+        }
+
+        #globalTopNav {
+            position: fixed;
+            top: 68px;
+            right: 22px;
+            z-index: 2147483000;
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+            transform: scale(0.72);
+            transform-origin: 100% 0;
+        }
+        #globalTopNav .nav-btn {
+            height: 30px;
+            min-width: 84px;
+            padding: 0 10px;
+            border-radius: 9px;
+            border: 1px solid rgba(102, 255, 255, 0.65);
+            background: linear-gradient(180deg, rgba(3, 12, 49, 0.35) 0%, rgba(37, 134, 241, 0.22) 100%);
+            color: #EAF7FF;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        }
+        #globalTopNav .nav-btn:hover {
+            background: linear-gradient(180deg, rgba(3, 12, 49, 0.45) 0%, rgba(37, 134, 241, 0.32) 100%);
+        }
+        #globalTopNav .nav-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 页面加载动效 - HUD过渡 */
+        #hud-loader {
+            position: fixed;
+            inset: 0;
+            background: var(--tech-bg-dark);
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
+        /* ================= 优化动效区域 ================= */
+        
+        /* 1. 外层圆环 4 个定位圆点呼吸闪烁 */
+        @keyframes pointBreathe {
+            0% { opacity: 1; filter: brightness(1); }
+            50% { opacity: 0.6; filter: brightness(0.6); }
+            100% { opacity: 1; filter: brightness(1); }
+        }
+        
+        /* 2. 中间进度环扫光动效 */
+        @keyframes sweepLight {
+            0% { clip-path: polygon(50% 50%, 50% 0%, 50% 0%, 50% 0%); }
+            100% { clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%); }
+        }
+        
+        /* 3. 顶层圆环缓慢旋转 */
+        @keyframes slowRotate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* 4. 白色扇形扫描线 (雷达核心扫描) */
+        @keyframes radarSweepCore {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .tech-radar-core-sweep {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transform-origin: center center;
+            background: conic-gradient(from 0deg, rgba(255,255,255,0.8) 0deg, transparent 40deg);
+            animation: radarSweepCore 10s linear infinite;
+            z-index: 10;
+            pointer-events: none;
+            filter: blur(2px);
+            mix-blend-mode: overlay;
+        }
+
+        /* 5. 中心文字动效 */
+        @keyframes textBreatheScale {
+            0% { text-shadow: 0 0 2px #ffff00; transform: translate(-50%, -50%) scale(1); }
+            50% { text-shadow: 0 0 10px #ffff00; transform: translate(-50%, -50%) scale(1.05); }
+            100% { text-shadow: 0 0 2px #ffff00; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes statusFloatGlow {
+            0%, 100% { transform: translate(-50%, -50%); text-shadow: 0 0 3px #00e5ff; opacity: 1; }
+            50% { transform: translate(-50%, calc(-50% - 2px)); text-shadow: 0 0 8px #00e5ff; opacity: 1; }
+            95% { opacity: 1; }
+            98% { opacity: 0; }
+        }
+
+        /* 6. 背景缓慢斜向漂移 */
+        @keyframes gridSlowDrift {
+            0% { background-position: 0 0; }
+            100% { background-position: -20px -20px; }
+        }
+        .tech-hud-background {
+            animation: gridSlowDrift 100s linear infinite !important;
+        }
+
+        /* 7. 进度环容器配置 */
+        .tech-progress-ring-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            z-index: 5;
+            mask-image: radial-gradient(transparent 65%, black 66%);
+            -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
+            animation: sweepLight 2s ease-out forwards;
+        }
+        .tech-progress-ring-fill {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--tech-highlight) 0%, var(--tech-primary) 96%, transparent 96%);
+        }
+        
+        .hud-radar-loader {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 1px solid var(--tech-highlight);
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+        }
+        .hud-radar-loader::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0%, rgba(0, 229, 255, 0.1) 80%, rgba(255, 255, 255, 0.8) 100%);
+            animation: scanRadarHUD 2s linear infinite;
+        }
+        .shatter-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--tech-highlight);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 元素逐帧淡入 */
+        .figma-home-wrapper > div {
+            opacity: 0;
+            /* 动画由 JS 控制触发 */
+        }
+
+        /* 全局底层动效 */
+        /* 1. 动态网格背景 */
+        body.figma-home::before {
+            content: '';
+            position: absolute;
+            inset: -100%;
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.13) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.13) 1px, transparent 1px);
+            background-size: 10px 10px;
+            pointer-events: none;
+            z-index: 1;
+            /* 网格斜向缓慢漂移 0.3px/s (对于大尺寸大约需要很长时间) */
+            animation: gridDrift 100s linear infinite;
+        }
+
+        /* 2. CRT 扫描线 */
+        .crt-scanline {
+            position: absolute;
+            inset: 0;
+            z-index: 999;
+            pointer-events: none;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 168, 255, 0.08) 51%);
+            background-size: 100% 4px;
+        }
+        
+        .global-scanline {
+            position: absolute;
+            left: 0;
+            top: -5px;
+            width: 100%;
+            height: 1px;
+            background: rgba(0, 168, 255, 0.15);
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.5);
+            z-index: 998;
+            pointer-events: none;
+            animation: globalScan 15s linear infinite; /* 周期15s */
+        }
+
+        /* 电子干扰波纹 */
+        body.figma-home::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 998;
+            pointer-events: none;
+            background: rgba(0, 229, 255, 0.02);
+            opacity: 0;
+            animation: glitchEffect 8s infinite;
+        }
+
+        /* 3. 菲涅尔边缘发光 */
+        .fresnel-glow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 997;
+            background: radial-gradient(circle at center, transparent 60%, rgba(0, 229, 255, 0.15) 100%);
+        }
+
+        /* 1. 外层圆环 4 个定位圆点呼吸闪烁 */
+        @keyframes pointBreathe {
+            0% { opacity: 1; filter: brightness(1); }
+            50% { opacity: 0.6; filter: brightness(0.6); }
+            100% { opacity: 1; filter: brightness(1); }
+        }
+        
+        /* 2. 中间进度环扫光动效 */
+        @keyframes sweepLight {
+            0% { clip-path: polygon(50% 50%, 50% 0%, 50% 0%, 50% 0%); }
+            100% { clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%); }
+        }
+        
+        /* 3. 顶层圆环缓慢旋转 */
+        @keyframes slowRotate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* 4. 白色扇形扫描线 (雷达核心扫描) */
+        @keyframes radarSweepCore {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .tech-radar-core-sweep {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transform-origin: center center;
+            background: conic-gradient(from 0deg, rgba(255,255,255,0.8) 0deg, transparent 40deg);
+            animation: radarSweepCore 10s linear infinite;
+            z-index: 10;
+            pointer-events: none;
+            filter: blur(2px);
+            mix-blend-mode: overlay;
+        }
+
+        /* 5. 中心文字动效 */
+        @keyframes textBreatheScale {
+            0% { text-shadow: 0 0 2px #ffff00; transform: translate(-50%, -50%) scale(1); }
+            50% { text-shadow: 0 0 10px #ffff00; transform: translate(-50%, -50%) scale(1.05); }
+            100% { text-shadow: 0 0 2px #ffff00; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes statusFloatGlow {
+            0%, 100% { transform: translate(-50%, -50%); text-shadow: 0 0 3px #00e5ff; opacity: 1; }
+            50% { transform: translate(-50%, calc(-50% - 2px)); text-shadow: 0 0 8px #00e5ff; opacity: 1; }
+            95% { opacity: 1; }
+            98% { opacity: 0; }
+        }
+
+        /* 6. 背景缓慢斜向漂移 */
+        @keyframes gridSlowDrift {
+            0% { background-position: 0 0; }
+            100% { background-position: -20px -20px; }
+        }
+        .tech-hud-background {
+            animation: gridSlowDrift 100s linear infinite !important;
+        }
+
+        /* 7. 进度环容器配置 */
+        .tech-progress-ring-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            z-index: 5;
+            mask-image: radial-gradient(transparent 65%, black 66%);
+            -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
+            animation: sweepLight 2s ease-out forwards;
+        }
+        .tech-progress-ring-fill {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--tech-highlight) 0%, var(--tech-primary) 96%, transparent 96%);
+        }
+        
+        /* 文本字符偏移阴影 */
+        .tech-text-glow {
+            text-shadow: 0 0 2px var(--tech-highlight), 0 0 5px rgba(0, 168, 255, 0.3) !important;
+            font-family: 'Orbitron', 'Consolas', monospace; /* 替换字体 */
+        }
+
+        .figma-home-wrapper > div > div {
+            z-index: 10;
+        }
+        
+        /* 面板/边框极致细节 (军用战术面板) */
+        .tech-panel-border {
+            position: absolute;
+            inset: 0;
+            border-radius: 0px; 
+            pointer-events: none;
+            z-index: 0; 
+            /* 背景：半透磨砂 + 电路纹理 */
+            background: rgba(0, 20, 50, 0.8);
+            backdrop-filter: blur(4px);
+            /* 双层发光阴影 */
+            box-shadow: 0 0 8px #00e5ff, 3px 3px 12px #000;
+            overflow: hidden;
+        }
+        /* 横向拉丝纹理 + 微型电路板纹路 (用渐变模拟) */
+        .tech-panel-border::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 168, 255, 0.06) 2px, rgba(0, 168, 255, 0.06) 3px),
+                radial-gradient(circle at 10% 10%, rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+                radial-gradient(circle at 90% 90%, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 20px 20px, 20px 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 分段式流光边框 (8段点亮) */
+        .tech-panel-border-scan {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .tech-panel-border-scan::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            /* 使用带透明度的虚线边框模拟8段，外加扫光蒙版 */
+            border: 1px dashed rgba(0, 229, 255, 0.2);
+            border-width: 2px;
+            border-image: repeating-linear-gradient(45deg, var(--tech-highlight) 0, var(--tech-highlight) 10px, transparent 10px, transparent 20px) 1;
+            -webkit-mask: conic-gradient(from var(--border-angle, 0deg), transparent 70%, white 100%);
+            mask: conic-gradient(from var(--border-angle, 0deg), transparent 70%, white 100%);
+            animation: borderScanConic 8s linear infinite;
+        }
+
+        @property --border-angle {
+            syntax: '<angle>';
+            inherits: true;
+            initial-value: 0deg;
+        }
+        @keyframes borderScanConic {
+            to { --border-angle: 360deg; }
+        }
+
+        /* 直角金属铆钉 (每角1个，中心白光，脉冲闪烁) */
+        .tech-panel-rivet {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border: 1px solid var(--tech-highlight);
+            background: rgba(0, 20, 50, 0.8);
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: rivetPulseNew 2s infinite;
+        }
+        .tech-panel-rivet::after {
+            content: '';
+            width: 1px;
+            height: 1px;
+            background: #fff;
+            box-shadow: 0 0 2px #fff;
+        }
+        .rivet-tl { top: 0; left: 0; }
+        .rivet-tr { top: 0; right: 0; }
+        .rivet-bl { bottom: 0; left: 0; }
+        .rivet-br { bottom: 0; right: 0; }
+
+        /* 中心全息 HUD 环特效重构 */
+        .tech-core-panel {
+            overflow: visible !important;
+            position: relative;
+            z-index: 15; 
+        }
+        .tech-hud-ring-1, .tech-hud-ring-2, .tech-hud-ring-3, .tech-hud-radar {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        /* 96% 核心圆环雷达扫描线 */
+        .tech-hud-radar-line {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 120px;
+            height: 120px;
+            transform-origin: 0 0;
+            background: conic-gradient(from 0deg, rgba(255,255,255,0.8) 0deg, transparent 10deg);
+            animation: scanRadarLine 10s linear infinite;
+            z-index: 9;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+            border-radius: 0 100% 0 0;
+        }
+
+        /* 侧边圆形仪表盘特效 (3层动效) */
+        .tech-side-ring-base {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% + 12px);
+            height: calc(100% + 12px);
+            border-radius: 50%;
+            border: 4px solid rgba(0, 168, 255, 0.2); /* 底层：静态暗环 */
+            pointer-events: none;
+            z-index: 1;
+        }
+        .tech-side-ring-sweep {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% + 12px);
+            height: calc(100% + 12px);
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--tech-highlight); /* 中层：动态扫光环 */
+            animation: sweepRingNew 2s cubic-bezier(0.1, 0.7, 0.1, 1) forwards;
+            z-index: 2;
+        }
+        /* 扫光时的粒子喷发用伪元素模拟 */
+        .tech-side-ring-sweep::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: 50%;
+            width: 4px; height: 4px;
+            background: #fff;
+            box-shadow: 0 0 5px var(--tech-highlight), 0 0 10px var(--tech-highlight);
+            border-radius: 50%;
+        }
+        .tech-side-ring-top {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% + 20px);
+            height: calc(100% + 20px);
+            border-radius: 50%;
+            border: 1px solid var(--tech-highlight); /* 顶层：高亮旋转环 */
+            filter: blur(1px); /* 边缘高斯模糊 */
+            animation: rotateOuterCentered 1.25s linear infinite; /* 0.8r/s */
+            z-index: 3;
+            border-left-color: transparent;
+            border-right-color: transparent;
+        }
+        
+        /* 数字跳动 + 呼吸发光 */
+        .tech-number-jump {
+            font-family: 'Orbitron', 'Consolas', monospace !important;
+            animation: numberBreathe 2s ease-in-out infinite alternate;
+        }
+
+        /* 柱状图动效 */
+        .tech-main-bar {
+            position: relative;
+            transform-origin: bottom;
+            animation: barGrow 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+            background: linear-gradient(to right, rgba(0, 229, 255, 0.53), rgba(0, 229, 255, 0.13)) !important; /* 纵向渐变高光 */
+            transition: all 0.3s;
+        }
+        .tech-main-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: #ffffff; /* 柱顶高光点 */
+            box-shadow: 0 0 2px #fff;
+            transition: all 0.3s ease;
+        }
+        .tech-main-bar:hover {
+            filter: brightness(1.5);
+        }
+        .tech-main-bar:hover::after {
+            height: 5px;
+            box-shadow: 0 0 10px var(--tech-highlight);
+            border-radius: 50%;
+            background: var(--tech-highlight);
+            top: -2px;
+        }
+
+        /* 坐标轴网格线微动 */
+        .tech-grid-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            border-top: 1px dashed rgba(0, 168, 255, 0.27);
+            animation: gridLineFloat 5s ease-in-out infinite alternate;
+        }
+        .tech-grid-line::before, .tech-grid-line::after {
+            content: '';
+            position: absolute;
+            top: -1px;
+            width: 2px; height: 2px;
+            background: var(--tech-highlight);
+            border-radius: 50%;
+            box-shadow: 0 0 4px var(--tech-highlight);
+        }
+        .tech-grid-line::before { left: 0; }
+        .tech-grid-line::after { right: 0; }
+
+        /* 折线图动效 */
+        .tech-line-chart path {
+            stroke: var(--tech-highlight);
+            stroke-width: 2;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 2s ease-out forwards, lineGlow 2s 2s infinite alternate;
+        }
+        .tech-line-point {
+            fill: var(--tech-bg-dark);
+            stroke: var(--tech-highlight);
+            stroke-width: 2;
+            transform-origin: center;
+            animation: pointPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+        }
+        .tech-line-point-pulse {
+            animation: pointPulseNew 1.5s infinite;
+        }
+
+        /* 卡片与按钮交互 */
+        .interactive-element {
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            z-index: 10; 
+            cursor: pointer;
+        }
+        .interactive-element:hover,
+        .todo-runtime-card:hover,
+        .figma-home-wrapper [data-layer^="btn__"]:hover,
+        .figma-home-wrapper [data-layer="team-overview-btn"]:hover {
+            transform: translateY(-2px);
+            background-color: rgba(0, 229, 255, 0.13) !important;
+            /* 边框流光加速在JS中控制或通过覆盖动画 */
+        }
+        .interactive-element:active,
+        .todo-runtime-card:active {
+            transform: scale(0.98);
+        }
+
+        /* 任务列表状态竖线 */
+        .task-status-line {
+            position: absolute;
+            left: 0;
+            top: 10%;
+            height: 80%;
+            width: 3px;
+            border-radius: 2px;
+            animation: statusBreathe 3s infinite alternate;
+        }
+        .status-green { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
+        .status-yellow { background: #ffff00; box-shadow: 0 0 5px #ffff00; }
+        .status-red { background: #ff0000; box-shadow: 0 0 5px #ff0000; }
+
+        /* 涟漪效果 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 229, 255, 0.5);
+            transform: scale(0);
+            animation: rippleEffect 0.6s linear;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* 动画关键帧 */
+        @keyframes gridDrift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100px, -100px); }
+        }
+        @keyframes globalScan {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+        @keyframes glitchEffect {
+            0%, 95%, 100% { opacity: 0; transform: translateX(0); }
+            96% { opacity: 1; transform: translateX(-2px); filter: contrast(1.5); }
+            97% { opacity: 1; transform: translateX(2px); filter: contrast(0.8); }
+            98% { opacity: 1; transform: translateX(-1px); }
+        }
+        @keyframes rivetPulseNew {
+            0%, 100% { opacity: 1; filter: brightness(1); }
+            50% { opacity: 0.8; filter: brightness(0.8); }
+        }
+        @keyframes sweepRingNew {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes numberBreathe {
+            0% { text-shadow: 0 0 2px var(--tech-highlight); }
+            100% { text-shadow: 0 0 5px var(--tech-highlight); }
+        }
+        @keyframes gridLineFloat {
+            0% { transform: translateY(-0.5px); }
+            100% { transform: translateY(0.5px); }
+        }
+        @keyframes lineGlow {
+            0% { filter: drop-shadow(0 0 2px var(--tech-highlight)); }
+            100% { filter: drop-shadow(0 0 6px var(--tech-highlight)); }
+        }
+        @keyframes pointPulseNew {
+            0% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.8); border-width: 2px; }
+            100% { box-shadow: 0 0 0 3px rgba(0, 229, 255, 0); border-width: 4px; }
+        }
+        @keyframes statusBreathe {
+            0% { filter: brightness(0.5); }
+            100% { filter: brightness(1); }
+        }
+        @keyframes scanRadarLine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeInLayout {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes rippleEffect {
+            to { transform: scale(4); opacity: 0; }
+        }
+        @keyframes rotateOuterCentered { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes scanRadarHUD { 100% { transform: rotate(360deg); } }
+        @keyframes barGrow { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
+    </style>
+</head>
+<body class="figma-home">
+    <div id="hud-loader">
+        <div class="hud-radar-loader"></div>
+    </div>
+    <div class="fresnel-glow"></div>
+    <div class="crt-scanline"></div>
+    <div class="global-scanline"></div>
+    <div id="globalTopNav">
+        <button class="nav-btn" type="button" onclick="window.location.href='{{ url_for('main_interface') }}'">原版</button>
+        <button class="nav-btn" type="button" onclick="window.location.href='{{ url_for('test1_interface') }}'">首页</button>
+        <button class="nav-btn" type="button" onclick="window.location.href='{{ url_for('patient_portal') }}'">病人中心</button>
+        <button class="nav-btn" type="button" onclick="window.location.href='{{ url_for('doctor_portal') }}'">医生中心</button>
+    </div>
+
+    <div id="uiViewport">
+        <div id="uiSpacer">
+            <div id="uiStage">
+                <div class="figma-home-wrapper">
+                    {% if figma_html %}
+                        {{ figma_html | safe }}
+                    {% else %}
+                        <div class="figma-missing">未找到 Figma 导出内容</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script id="main-data" type="application/json">{{ {
+        "dashboard_overview": (dashboard_overview or {}),
+        "module_cards": (module_cards or []),
+        "task_publish_data": (task_publish_data or {}),
+        "warning_overview": (warning_overview or {}),
+        "bar_values": (bar_values or [])
+    } | tojson }}</script>
+    <script>
+        const uiStage = document.getElementById('uiStage');
+        const uiSpacer = document.getElementById('uiSpacer');
+        function fitUiStage() {
+            if (!uiStage || !uiSpacer) return;
+            const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+            if (!vw) return;
+            const baseWidth = 1920;
+            const baseHeight = Math.max(1080, uiStage.scrollHeight || 0);
+            const scale = vw / baseWidth;
+            uiSpacer.style.width = (baseWidth * scale) + 'px';
+            uiSpacer.style.height = (baseHeight * scale) + 'px';
+            uiStage.style.transform = 'scale(' + scale + ')';
+        }
+        window.addEventListener('resize', fitUiStage);
+        window.addEventListener('load', fitUiStage);
+        requestAnimationFrame(fitUiStage);
+
+        // 页面加载动效控制
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('hud-loader');
+                if (loader) {
+                    // 生成碎裂粒子
+                    for (let i = 0; i < 20; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'shatter-particle';
+                        particle.style.left = '50%';
+                        particle.style.top = '50%';
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * 100 + 50;
+                        const tx = Math.cos(angle) * dist;
+                        const ty = Math.sin(angle) * dist;
+                        particle.animate([
+                            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                        ], { duration: 500, easing: 'ease-out' });
+                        loader.appendChild(particle);
+                    }
+                    const radar = loader.querySelector('.hud-radar-loader');
+                    if (radar) radar.style.display = 'none';
+                    setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => {
+                            loader.remove();
+                            // 开始元素逐帧淡入
+                            const children = Array.from(document.querySelector('.figma-home-wrapper').children);
+                            children.forEach((child, index) => {
+                                child.style.opacity = '0';
+                                child.style.animation = `fadeInLayout 0.5s ease forwards ${index * 0.05}s`;
+                            });
+                        }, 300);
+                    }, 100);
+                }
+            }, 800); // 假装加载一段时间
+        });
+
+        // 全局波纹效果
+        document.addEventListener('click', function (e) {
+            const isClickable = e.target.closest('.interactive-element, .todo-runtime-card, [data-layer^="btn__"], [data-layer="list"], button');
+            if (isClickable) {
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple';
+                const rect = isClickable.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+                ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+                isClickable.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            }
+        });
+
+        const mainDataEl = document.getElementById('main-data');
+        let mainData = {};
+        if (mainDataEl) {
+            try {
+                mainData = JSON.parse(mainDataEl.textContent);
+            } catch (err) {
+                mainData = {};
+            }
+        }
+        const dashboardOverview = mainData.dashboard_overview || {};
+        const moduleCards = mainData.module_cards || [];
+        const taskPublishData = mainData.task_publish_data || {};
+        const warningOverview = mainData.warning_overview || {};
+        const visualTaskPublish = taskPublishData.title ? taskPublishData : {
+            title: '系统任务概览',
+            cards: [
+                { container: '已预订', value: '128', label: '任务总量' },
+                { container: '会议使用率', value: '96%', label: '完成率' },
+                { container: '已开会议', value: '122', label: '已完成' },
+                { container: '待开会议', value: '6', label: '待处理' }
+            ],
+            categories: [
+                { label: '病例建档', value: 128 },
+                { label: '诊断录入', value: 286 },
+                { label: '影像归档', value: 244 },
+                { label: '远程推理', value: 148 },
+                { label: '智能评估', value: 96 },
+                { label: '协同随访', value: 212 }
+            ]
+        };
+        const visualWarningOverview = {
+            title: '核心指标',
+            rings: [
+                { container: '待处理', label: '今日接诊', value: '48' },
+                { container: '处理率', label: '推理成功率', value: '98%' },
+                { container: '历史总数', label: '平均响应', value: '1.6s' }
+            ],
+            items: [
+                { message: '运行状态：今日新增诊断记录 26 条', time: '03.14 09:30' },
+                { message: '运行状态：远程推理已完成 41 次', time: '03.14 10:05' },
+                { message: '运行状态：影像归档任务完成率 97%', time: '03.14 10:42' }
+            ]
+        };
+        const barValues = mainData.bar_values || [];
+        const displayBarValues = [118, 136, 129, 142, 151, 145, 158, 166, 154, 173, 168, 182, 176, 189, 194, 186, 201, 209, 198, 214, 223, 216, 231, 245];
+        const displayOverview = {
+            ...dashboardOverview,
+            center_percent: 96,
+            center_status: '系统在线'
+        };
+        const displayModuleCards = [
+            { title: '病例管理', percent: 96, value: '128' },
+            { title: '诊断记录', percent: 93, value: '286' },
+            { title: '影像归档', percent: 95, value: '244' },
+            { title: '远程推理', percent: 91, value: '148' },
+            { title: '医患协同', percent: 89, value: '212' },
+            { title: '智能评估', percent: 94, value: '136' }
+        ];
+        const getLeafDivs = (root) => Array.from(root.querySelectorAll('div')).filter((node) => node.children.length === 0);
+        const readLeftValue = (node) => {
+            const left = Number.parseFloat(node.style.left || '0');
+            return Number.isNaN(left) ? 0 : left;
+        };
+        const readTopValue = (node) => {
+            const top = Number.parseFloat(node.style.top || '0');
+            return Number.isNaN(top) ? 0 : top;
+        };
+
+        const dateNode = document.querySelector('[data-layer="x年x月x日"]');
+        if (dateNode && displayOverview.date_label) {
+            dateNode.textContent = displayOverview.date_label;
+        }
+
+        const introTitleNodes = getLeafDivs(document).filter((node) => node.textContent.trim() === '输入文本').sort((a, b) => readLeftValue(a) - readLeftValue(b));
+        if (introTitleNodes.length >= 2) {
+            introTitleNodes[0].textContent = displayOverview.left_title || '病例全周期管理';
+            introTitleNodes[1].textContent = displayOverview.right_title || '远程推理与智能评估';
+            introTitleNodes[0].style.width = '220px';
+            introTitleNodes[1].style.width = '200px';
+            introTitleNodes[0].style.fontSize = '20px';
+            introTitleNodes[1].style.fontSize = '20px';
+            introTitleNodes[0].style.lineHeight = '32px';
+            introTitleNodes[1].style.lineHeight = '32px';
+            introTitleNodes[0].style.left = '82px';
+            introTitleNodes[1].style.left = '542px'; // 整体往右移 20px
+            introTitleNodes[0].style.top = '84px';
+            introTitleNodes[1].style.top = '84px';
+            introTitleNodes[0].style.whiteSpace = 'normal';
+            introTitleNodes[1].style.whiteSpace = 'normal';
+            introTitleNodes[0].style.wordBreak = 'break-word';
+            introTitleNodes[1].style.wordBreak = 'break-word';
+            introTitleNodes[0].style.opacity = '1';
+            introTitleNodes[1].style.opacity = '1';
+            introTitleNodes[0].style.zIndex = '25';
+            introTitleNodes[1].style.zIndex = '25';
+            introTitleNodes[0].style.position = 'absolute';
+            introTitleNodes[1].style.position = 'absolute';
+        }
+        const introDescNodes = getLeafDivs(document).filter((node) => node.textContent.includes('输入文本输入文本')).sort((a, b) => readLeftValue(a) - readLeftValue(b));
+        if (introDescNodes.length >= 2) {
+            introDescNodes[0].textContent = '覆盖建档、诊断、影像归档与协同，形成可追溯临床数据闭环。';
+            introDescNodes[1].textContent = '支持 .nii 上传与 SSH 调度推理，结果回传后可视化分析。';
+            introDescNodes[0].style.width = '190px'; // 收缩右边界防止被圆环遮挡
+            introDescNodes[1].style.width = '180px'; // 适当加宽右侧文本框
+            introDescNodes[0].style.lineHeight = '22px';
+            introDescNodes[1].style.lineHeight = '22px';
+            introDescNodes[0].style.fontSize = '14px';
+            introDescNodes[1].style.fontSize = '14px';
+            introDescNodes[0].style.fontWeight = '500';
+            introDescNodes[1].style.fontWeight = '500';
+            introDescNodes[0].style.opacity = '0.95';
+            introDescNodes[1].style.opacity = '0.95';
+            introDescNodes[0].style.top = '132px';
+            introDescNodes[1].style.top = '132px';
+            introDescNodes[0].style.left = '82px';
+            introDescNodes[1].style.left = '542px'; // 整体往右移 20px
+            introDescNodes[0].style.whiteSpace = 'normal';
+            introDescNodes[1].style.whiteSpace = 'normal';
+            introDescNodes[0].style.wordBreak = 'break-word';
+            introDescNodes[1].style.wordBreak = 'break-word';
+            introDescNodes[0].style.zIndex = '25';
+            introDescNodes[1].style.zIndex = '25';
+            introDescNodes[0].style.position = 'absolute';
+            introDescNodes[1].style.position = 'absolute';
+        }
+
+        const centerPanel = document.querySelector('[data-layer="中"]');
+        if (centerPanel) {
+            centerPanel.classList.add('tech-core-panel');
+            const centerLeafNodes = getLeafDivs(centerPanel);
+            const centerStatusNode = centerLeafNodes.find((node) => node.textContent.trim() === '系统正常');
+            const centerPercentNode = centerPanel.querySelector('[data-layer="98"]')
+                || centerLeafNodes.find((node) => /^\d{1,3}$/.test(node.textContent.trim()));
+            const centerPercentSymbolNode = centerPanel.querySelector('[data-layer="%"]')
+                || centerLeafNodes.find((node) => node.textContent.trim() === '%');
+            const centerPercentCombinedNode = centerLeafNodes.find((node) => /^\d{1,3}%$/.test(node.textContent.trim()))
+                || Array.from(centerPanel.querySelectorAll('[data-layer]'))
+                    .find((node) => /^\d{1,3}%$/.test(`${node.getAttribute('data-layer') || ''}`.trim()));
+            if (centerStatusNode) {
+                centerStatusNode.textContent = displayOverview.center_status || '系统在线';
+                centerStatusNode.style.left = '50%';
+                centerStatusNode.style.transform = 'translate(-50%, -50%)';
+                centerStatusNode.style.width = '160px';
+                centerStatusNode.style.textAlign = 'center';
+                centerStatusNode.style.top = 'calc(50% + 28px)';
+                centerStatusNode.style.fontSize = '14px';
+                centerStatusNode.style.animation = 'statusFloatGlow 3s ease-in-out infinite';
+            }
+            if (centerPercentCombinedNode) {
+                const targetVal = displayOverview.center_percent ?? 98;
+                centerPercentCombinedNode.textContent = `0%`;
+                let currentVal = 0;
+                const duration = 2000;
+                const steps = 60;
+                const stepTime = duration / steps;
+                const increment = targetVal / steps;
+                
+                const timer = setInterval(() => {
+                    currentVal += increment;
+                    if (currentVal >= targetVal) {
+                        currentVal = targetVal;
+                        clearInterval(timer);
+                    }
+                    centerPercentCombinedNode.textContent = `${Math.round(currentVal)}%`;
+                }, stepTime);
+                
+                centerPercentCombinedNode.style.width = '110px';
+                centerPercentCombinedNode.style.left = '50%';
+                centerPercentCombinedNode.style.top = 'calc(50% - 10px)';
+                centerPercentCombinedNode.style.transform = 'translate(-50%, -50%)';
+                centerPercentCombinedNode.style.textAlign = 'center';
+                centerPercentCombinedNode.style.fontSize = '36px';
+                centerPercentCombinedNode.style.lineHeight = '40px';
+                centerPercentCombinedNode.style.letterSpacing = '2px';
+                centerPercentCombinedNode.style.fontFamily = "'Orbitron', 'Consolas', monospace";
+                centerPercentCombinedNode.style.animation = 'textBreatheScale 2s ease-in-out infinite';
+                if (centerPercentSymbolNode && centerPercentSymbolNode !== centerPercentCombinedNode) {
+                    centerPercentSymbolNode.style.display = 'none';
+                }
+            } else if (centerPercentNode) {
+                const targetVal = displayOverview.center_percent ?? 98;
+                centerPercentNode.textContent = `0`;
+                let currentVal = 0;
+                const duration = 2000;
+                const steps = 60;
+                const stepTime = duration / steps;
+                const increment = targetVal / steps;
+                
+                const timer = setInterval(() => {
+                    currentVal += increment;
+                    if (currentVal >= targetVal) {
+                        currentVal = targetVal;
+                        clearInterval(timer);
+                    }
+                    centerPercentNode.textContent = `${Math.round(currentVal)}`;
+                }, stepTime);
+                
+                centerPercentNode.style.width = '64px';
+                centerPercentNode.style.left = 'calc(50% - 8px)';
+                centerPercentNode.style.top = 'calc(50% - 10px)';
+                centerPercentNode.style.transform = 'translate(-50%, -50%)';
+                centerPercentNode.style.textAlign = 'center';
+                centerPercentNode.style.fontSize = '36px';
+                centerPercentNode.style.lineHeight = '40px';
+                centerPercentNode.style.fontFamily = "'Orbitron', 'Consolas', monospace";
+                centerPercentNode.style.animation = 'textBreatheScale 2s ease-in-out infinite';
+                if (centerPercentSymbolNode) {
+                    centerPercentSymbolNode.style.top = 'calc(50% - 8px)';
+                    centerPercentSymbolNode.style.transform = 'translate(0, -50%)';
+                    centerPercentSymbolNode.style.fontSize = '16px';
+                    centerPercentSymbolNode.style.lineHeight = '16px';
+                    centerPercentSymbolNode.style.position = 'absolute';
+                    centerPercentSymbolNode.style.left = `calc(50% + 18px)`;
+                }
+            }
+            if (!centerPanel.querySelector('.tech-core-aura')) {
+                const aura = document.createElement('div');
+                aura.className = 'tech-core-aura';
+                centerPanel.appendChild(aura);
+
+                const ringOuter = document.createElement('div');
+                ringOuter.className = 'tech-hud-ring-outer';
+                ringOuter.style.animation = 'slowRotate 1.25s linear infinite'; // 0.8 r/s
+                ringOuter.style.filter = 'blur(1px)';
+                
+                // 添加外圈 4 个定位圆点
+                const positions = [
+                    { top: '-4px', left: 'calc(50% - 4px)' },
+                    { bottom: '-4px', left: 'calc(50% - 4px)' },
+                    { left: '-4px', top: 'calc(50% - 4px)' },
+                    { right: '-4px', top: 'calc(50% - 4px)' }
+                ];
+                positions.forEach(pos => {
+                    const dot = document.createElement('div');
+                    dot.style.position = 'absolute';
+                    dot.style.width = '8px';
+                    dot.style.height = '8px';
+                    dot.style.borderRadius = '50%';
+                    dot.style.background = '#00e5ff';
+                    dot.style.boxShadow = '0 0 6px #00e5ff';
+                    dot.style.animation = 'pointBreathe 2s ease-in-out infinite';
+                    Object.assign(dot.style, pos);
+                    ringOuter.appendChild(dot);
+                });
+                centerPanel.appendChild(ringOuter);
+
+                const ringInner = document.createElement('div');
+                ringInner.className = 'tech-hud-ring-inner';
+                centerPanel.appendChild(ringInner);
+
+                const scan = document.createElement('div');
+                scan.className = 'tech-hud-scan';
+                centerPanel.appendChild(scan);
+
+                const radarLine = document.createElement('div');
+                radarLine.className = 'tech-hud-radar-line';
+                // 隐藏原有的硬切角扫描线，使用新的叠加扫光
+                radarLine.style.display = 'none';
+                centerPanel.appendChild(radarLine);
+                
+                const sweepCore = document.createElement('div');
+                sweepCore.className = 'tech-radar-core-sweep';
+                centerPanel.appendChild(sweepCore);
+                
+                // 进度环
+                const progressRing = document.createElement('div');
+                progressRing.className = 'tech-progress-ring-container';
+                const progressFill = document.createElement('div');
+                progressFill.className = 'tech-progress-ring-fill';
+                progressRing.appendChild(progressFill);
+                centerPanel.appendChild(progressRing);
+            }
+        }
+
+        // 提取 topPanel 到舞台以避免被网格遮挡和产生朦胧效果
+        const topPanel = document.querySelector('div[data-layer="top"]');
+        if (topPanel) {
+            (uiStage || document.body).appendChild(topPanel);
+            topPanel.style.position = 'absolute';
+            topPanel.style.top = '0';
+            topPanel.style.left = '0';
+            topPanel.style.zIndex = '10000';
+            
+            // 为主页的顶部按钮添加链接
+            const topBtns = Array.from(topPanel.querySelectorAll('div[data-layer="btn"]'));
+            if (topBtns.length > 0) {
+                topBtns.forEach((btn, idx) => {
+                    btn.style.cursor = 'pointer';
+                    // 第一个按钮可能是首页，第二个是新增或者数字中心
+                    if (idx === 0) {
+                        btn.addEventListener('click', () => window.location.href = '{{ url_for("main_interface") }}');
+                    } else if (idx === 1) {
+                        btn.addEventListener('click', () => window.location.href = '{{ url_for("patient_portal") }}');
+                    }
+                });
+            }
+            
+            // 修复用户名显示
+            const accountNode = topPanel.querySelector('div[data-layer="账号"]');
+            if (accountNode) {
+                accountNode.style.cursor = 'pointer';
+                const currentUsername = `{{ (current_user.username if current_user.is_authenticated else 'admin') | e }}` || 'admin';
+                const usernameNode = accountNode.querySelector('div[data-layer="张小花"]')
+                    || Array.from(accountNode.querySelectorAll('div'))
+                        .find((node) => node.children.length === 0 && node.textContent.trim().length > 0);
+                if (usernameNode) {
+                    usernameNode.textContent = currentUsername;
+                }
+                accountNode.addEventListener('click', () => {
+                    window.location.href = '{{ url_for("logout") }}';
+                });
+            }
+        }
+
+        const targetBgs = Array.from(document.querySelectorAll('[data-layer="bg"]')).filter(node => {
+            const width = parseFloat(node.style.width || '0');
+            return width > 200; 
+        });
+        targetBgs.forEach(bg => {
+            if (!bg.querySelector('.tech-panel-border') && bg.closest('.figma-home-wrapper')) {
+                // 确保原有子元素(如任务列表模块)显示在底层面板之上，避免被遮挡朦胧
+                Array.from(bg.children).forEach(child => {
+                    if (window.getComputedStyle(child).position === 'static') {
+                        child.style.position = 'relative';
+                    }
+                    child.style.zIndex = '10';
+                });
+
+                // 面板底色及纹理
+                const border = document.createElement('div');
+                border.className = 'tech-panel-border';
+                
+                // 分段式流光
+                const scan = document.createElement('div');
+                scan.className = 'tech-panel-border-scan';
+                
+                // 四角铆钉
+                ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+                    const rivet = document.createElement('div');
+                    rivet.className = `tech-panel-rivet rivet-${pos}`;
+                    bg.appendChild(rivet);
+                });
+
+                bg.appendChild(border);
+                bg.appendChild(scan);
+                bg.style.boxShadow = 'none'; // 清除原背景阴影以使用新的双层阴影
+            }
+        });
+        const dataPanel = document.querySelector('[data-layer="数据"]');
+        if (dataPanel) {
+            // 添加坐标轴网格线
+            for (let i = 0; i < 5; i++) {
+                const gridLine = document.createElement('div');
+                gridLine.className = 'tech-grid-line';
+                gridLine.style.top = `${28 + i * 40}px`;
+                dataPanel.appendChild(gridLine);
+            }
+            
+            const barTitleNode = getLeafDivs(dataPanel).find((node) => node.textContent.trim() === '人流量');
+            if (barTitleNode) {
+                barTitleNode.textContent = displayOverview.bar_title || '近24日推理任务量';
+                barTitleNode.style.left = '286px';
+            }
+            const barsSource = Array.isArray(displayBarValues) && displayBarValues.length === 24
+                ? displayBarValues
+                : barValues;
+            if (Array.isArray(barsSource) && barsSource.length === 24) {
+                const barNodes = Array.from(dataPanel.querySelectorAll(':scope > [data-svg-wrapper][data-layer="路径"]'))
+                    .filter((node) => {
+                        const svg = node.querySelector('svg');
+                        if (!svg) {
+                            return false;
+                        }
+                        const svgHeight = Number.parseFloat(svg.getAttribute('height') || '0');
+                        return svgHeight > 10;
+                    })
+                    .sort((a, b) => readLeftValue(a) - readLeftValue(b))
+                    .slice(0, 24);
+                const valueNodes = Array.from(dataPanel.querySelectorAll(':scope > div'))
+                    .filter((node) => node.children.length === 0 && /^\d+$/.test(node.textContent.trim()) && readTopValue(node) < 220)
+                    .sort((a, b) => readLeftValue(a) - readLeftValue(b))
+                    .slice(0, 24);
+                const maxValue = Math.max(...barsSource, 1);
+                const minBarHeight = 28;
+                const maxBarHeight = 208;
+                const chartFloor = 226;
+                barNodes.forEach((node, index) => {
+                    const rawValue = Number.parseInt(`${barsSource[index]}`, 10);
+                    const safeValue = Number.isNaN(rawValue) ? 0 : Math.max(0, rawValue);
+                    const scaledHeight = Math.round(minBarHeight + ((safeValue / maxValue) * (maxBarHeight - minBarHeight)));
+                    const top = chartFloor - scaledHeight;
+                    const barLeft = readLeftValue(node);
+                    const svg = node.querySelector('svg');
+                    if (svg) {
+                        const gradientId = `bar-gradient-${index}`;
+                        svg.setAttribute('height', `${scaledHeight}`);
+                        svg.setAttribute('viewBox', `0 0 14 ${scaledHeight}`);
+                        svg.innerHTML = `<path d="M0 ${scaledHeight}V7C0 3.13401 3.13401 0 7 0C10.866 0 14 3.13401 14 7V${scaledHeight}H0Z" fill="url(#${gradientId})"/><defs><linearGradient id="${gradientId}" x1="7" y1="0" x2="7" y2="${scaledHeight}" gradientUnits="userSpaceOnUse"><stop stop-color="#09C9C5"/><stop offset="1" stop-color="#00308F"/></linearGradient></defs>`;
+                    }
+                    node.style.top = `${top}px`;
+                    node.classList.add('tech-main-bar');
+                    node.style.animationDelay = `${index * 0.05}s`;
+                    if (valueNodes[index]) {
+                        valueNodes[index].textContent = `${safeValue}`;
+                        valueNodes[index].style.top = `${Math.max(0, top - 18)}px`;
+                        valueNodes[index].style.left = `${barLeft + 7}px`;
+                        valueNodes[index].style.width = '40px';
+                        valueNodes[index].style.textAlign = 'center';
+                        valueNodes[index].style.transform = 'translateX(-50%)';
+                    }
+                });
+            }
+        }
+
+        const buttonMappings = [
+            { selector: '[data-layer="btn__smart-vehicle__to-main"]', url: '{{ url_for("main_interface") }}' },
+            { selector: '[data-layer="btn__smart-visitor__to-patients"]', url: '{{ url_for("patients") }}' },
+            { selector: '[data-layer="btn__smart-energy__to-doctors"]', url: '{{ url_for("doctors") }}' },
+            { selector: '[data-layer="btn__smart-property__to-todos"]', url: '{{ url_for("todos") }}' },
+            { selector: '[data-layer="btn__smart-attendance__to-remote-test"]', url: '{{ url_for("remote_test") }}' },
+            { selector: '[data-layer="btn__smart-security__to-logout"]', url: '{{ url_for("logout") }}' }
+        ];
+
+        buttonMappings.forEach(({ selector, url }) => {
+            const trigger = document.querySelector(selector);
+            if (!trigger) {
+                return;
+            }
+            const button = trigger.closest('[data-layer="list"]') || trigger;
+            button.style.cursor = 'pointer';
+            button.classList.add('interactive-element');
+            button.addEventListener('click', () => {
+                window.location.href = url;
+            });
+        });
+
+        const middleCardSelectors = [
+            '[data-layer="btn__smart-vehicle__to-main"]',
+            '[data-layer="btn__smart-visitor__to-patients"]',
+            '[data-layer="btn__smart-energy__to-doctors"]',
+            '[data-layer="btn__smart-property__to-todos"]',
+            '[data-layer="btn__smart-attendance__to-remote-test"]',
+            '[data-layer="btn__smart-security__to-logout"]'
+        ];
+        middleCardSelectors.forEach((selector, index) => {
+            const trigger = document.querySelector(selector);
+            if (!trigger) {
+                return;
+            }
+            const card = trigger.closest('[data-layer="list"]');
+            if (!card) {
+                return;
+            }
+            const noisyStripe = Array.from(card.querySelectorAll('[data-layer="形状结合"]')).find((node) => {
+                const left = Number.parseFloat(node.style.left || '0');
+                return !Number.isNaN(left) && left < -20;
+            });
+            if (noisyStripe) {
+                noisyStripe.style.display = 'none';
+            }
+            const primaryStripe = Array.from(card.querySelectorAll('[data-layer="形状结合"]')).find((node) => {
+                const left = Number.parseFloat(node.style.left || '0');
+                return Number.isNaN(left) || left >= 0;
+            });
+            if (primaryStripe) {
+                primaryStripe.style.display = '';
+                primaryStripe.style.position = 'absolute';
+                primaryStripe.style.left = '9.87px';
+                primaryStripe.style.top = '9.87px';
+                primaryStripe.style.width = '102px';
+                primaryStripe.style.height = '102px';
+                primaryStripe.style.opacity = '';
+                primaryStripe.style.zIndex = '1';
+            }
+            const polygonNode = card.querySelector('[data-layer="多边形"]');
+            if (polygonNode) {
+                polygonNode.style.left = '0px';
+                polygonNode.style.top = '0px';
+                polygonNode.style.position = 'absolute';
+                polygonNode.style.zIndex = '1';
+            }
+            const innerCircle = Array.from(card.querySelectorAll('div')).find((node) => node.getAttribute('data-layer') === '椭圆形');
+            if (!innerCircle) {
+                return;
+            }
+            innerCircle.style.position = 'absolute';
+            innerCircle.style.width = '76.13px';
+            innerCircle.style.height = '76.13px';
+            innerCircle.style.left = '12.44px';
+            innerCircle.style.top = '19.94px';
+            innerCircle.style.zIndex = '2';
+            const circleCenterX = Number.parseFloat(innerCircle.style.left || '0') + (Number.parseFloat(innerCircle.style.width || '0') / 2);
+            Array.from(card.querySelectorAll('[data-role^="middle-card-lines"]')).forEach((node) => node.remove());
+            const percentNode = card.querySelector('[data-layer="32%"]')
+                || Array.from(card.querySelectorAll('div')).find((node) => node.children.length === 0 && node.textContent.trim() === '32%');
+            const valueNode = card.querySelector('[data-layer="124"]')
+                || Array.from(card.querySelectorAll('div')).find((node) => node.children.length === 0 && node.textContent.trim() === '124');
+            const arcNode = card.querySelector('[data-layer="路径"]');
+            const cardConfig = displayModuleCards[index] || moduleCards[index];
+            const buttonLabelNode = Array.from(trigger.querySelectorAll('div')).find((node) => node.children.length === 0 && node.textContent.trim().length > 0);
+            if (cardConfig && buttonLabelNode) {
+                buttonLabelNode.textContent = cardConfig.title;
+            }
+            if (percentNode) {
+                const percentText = cardConfig ? `${cardConfig.percent}%` : percentNode.textContent.trim();
+                percentNode.style.position = 'absolute';
+                percentNode.style.left = `${circleCenterX}px`;
+                percentNode.style.transform = 'translateX(-50%)';
+                percentNode.style.width = '56px';
+                percentNode.style.textAlign = 'center';
+                percentNode.style.zIndex = '3';
+                percentNode.style.top = '34px';
+                percentNode.style.fontSize = '13px';
+                percentNode.style.lineHeight = '16px';
+                percentNode.textContent = percentText;
+            }
+            if (valueNode) {
+                const valueText = cardConfig ? `${cardConfig.value}` : valueNode.textContent.trim();
+                const valueSize = valueText.length >= 4 ? 18 : 20;
+                valueNode.style.position = 'absolute';
+                valueNode.style.left = `${circleCenterX}px`;
+                valueNode.style.transform = 'translateX(-50%)';
+                valueNode.style.width = '86px';
+                valueNode.style.textAlign = 'center';
+                valueNode.style.zIndex = '3';
+                valueNode.style.top = '52px';
+                valueNode.style.fontSize = `${valueSize}px`;
+                valueNode.style.lineHeight = `${valueSize + 6}px`;
+                valueNode.textContent = valueText;
+            }
+            if (arcNode) {
+                arcNode.style.left = '44.16px';
+                arcNode.style.top = '17.22px';
+                arcNode.style.position = 'absolute';
+                arcNode.style.zIndex = '3';
+                const arcSvg = arcNode.querySelector('svg');
+                if (arcSvg) {
+                    const gradientId = `middle-card-arc-gradient-${index}`;
+                    const percent = Math.max(0, Math.min(100, Number(cardConfig?.percent ?? 0)));
+                    arcSvg.setAttribute('width', '47');
+                    arcSvg.setAttribute('height', '47');
+                    arcSvg.setAttribute('viewBox', '0 0 47 47');
+                    arcSvg.setAttribute('fill', 'none');
+                    arcSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                    arcSvg.innerHTML = `<defs><linearGradient id="${gradientId}" x1="3" y1="3" x2="45" y2="45" gradientUnits="userSpaceOnUse"><stop stop-color="#00e5ff"/><stop offset="1" stop-color="#00e5ff"/></linearGradient></defs><path class="tech-arc-sweep" d="M4 4A40 40 0 0 1 43 43" pathLength="100" stroke="url(#${gradientId})" stroke-width="7" stroke-linecap="round" stroke-dasharray="${percent} 100" style="animation: arcSweepFlow 2s linear infinite; stroke-dashoffset: 100; transition: stroke-dashoffset 2s ease" />`;
+                    // 强制触发重绘实现初始扫光
+                    setTimeout(() => {
+                        const path = arcSvg.querySelector('path');
+                        if(path) path.style.strokeDashoffset = '0';
+                    }, 100);
+                }
+            }
+        });
+
+        const doctorLabelNode = Array.from(document.querySelectorAll('div')).find((node) => node.children.length === 0 && node.textContent.trim() === '医生人数');
+        if (doctorLabelNode) {
+            const doctorBadge = doctorLabelNode.closest('[data-layer="园区面积"]');
+            if (doctorBadge) {
+                const progressNode = doctorBadge.querySelector('[data-layer="进度"]');
+                if (progressNode) {
+                    progressNode.style.display = 'none';
+                }
+                doctorBadge.style.overflow = 'visible';
+                
+                const innerCircle = doctorBadge.querySelector('[data-layer="椭圆形"]');
+                if (innerCircle) {
+                    // 添加三层光环
+                    const ringBase = document.createElement('div');
+                    ringBase.className = 'tech-side-ring-base';
+                    const ringSweep = document.createElement('div');
+                    ringSweep.className = 'tech-side-ring-sweep';
+                    const ringTop = document.createElement('div');
+                    ringTop.className = 'tech-side-ring-top';
+                    
+                    // 补充左侧弧形进度条动效（扫光流动）
+                    const sideProgressSweep = document.createElement('div');
+                    sideProgressSweep.className = 'tech-progress-ring-container';
+                    sideProgressSweep.style.zIndex = '6';
+                    sideProgressSweep.style.width = 'calc(100% + 20px)';
+                    sideProgressSweep.style.height = 'calc(100% + 20px)';
+                    sideProgressSweep.style.clipPath = 'polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%)';
+                    sideProgressSweep.style.animation = 'sweepLight 3s ease-out infinite alternate';
+                    const sideProgressFill = document.createElement('div');
+                    sideProgressFill.className = 'tech-progress-ring-fill';
+                    sideProgressFill.style.background = 'conic-gradient(from -90deg, transparent 0%, #00e5ff 40%, transparent 80%)';
+                    sideProgressSweep.appendChild(sideProgressFill);
+
+                    const rect = innerCircle.getBoundingClientRect();
+                    const badgeRect = doctorBadge.getBoundingClientRect();
+                    const offsetX = rect.left - badgeRect.left + rect.width / 2;
+                    const offsetY = rect.top - badgeRect.top + rect.height / 2;
+                    
+                    [ringBase, ringSweep, ringTop, sideProgressSweep].forEach(ring => {
+                        ring.style.left = `${offsetX}px`;
+                        ring.style.top = `${offsetY}px`;
+                        ring.style.transform = 'translate(-50%, -50%)';
+                    });
+
+                    ringBase.style.width = `${rect.width + 12}px`;
+                    ringBase.style.height = `${rect.height + 12}px`;
+                    ringSweep.style.width = `${rect.width + 12}px`;
+                    ringSweep.style.height = `${rect.height + 12}px`;
+                    ringTop.style.width = `${rect.width + 20}px`;
+                    ringTop.style.height = `${rect.height + 20}px`;
+
+                    doctorBadge.appendChild(ringBase);
+                    doctorBadge.appendChild(ringSweep);
+                    doctorBadge.appendChild(ringTop);
+                    doctorBadge.appendChild(sideProgressSweep);
+                }
+                
+                // 数字跳动特效
+                const valueNode = Array.from(doctorBadge.querySelectorAll('div')).find((node) => node.children.length === 0 && /^[\d\.]+s?%?$/.test(node.textContent.trim()));
+                if(valueNode) {
+                    valueNode.classList.add('tech-number-jump');
+                }
+            }
+        }
+        
+        const toTwoLineLabel = (text) => {
+            const plain = `${text || ''}`.trim();
+            if (!plain) {
+                return '';
+            }
+            if (plain.includes(' ')) {
+                return plain.replace(/\s+/g, '<br/>');
+            }
+            if (plain.length >= 4) {
+                return `${plain.slice(0, 2)}<br/>${plain.slice(2)}`;
+            }
+            return plain;
+        };
+
+        const taskViewData = visualTaskPublish;
+        const taskTitleNode = getLeafDivs(document).find((node) => node.textContent.trim() === '任务发布');
+        if (taskTitleNode) {
+            taskTitleNode.textContent = taskViewData.title || '系统任务概览';
+        }
+        const taskCards = Array.isArray(taskViewData.cards) ? taskViewData.cards : [];
+        taskCards.forEach((cardData) => {
+            const cardNode = document.querySelector(`[data-layer="${cardData.container}"]`);
+            if (!cardNode) {
+                return;
+            }
+            const allDivs = Array.from(cardNode.querySelectorAll('div'));
+            const valueNode = allDivs
+                .filter((node) => /^[0-9]+(?:\.[0-9]+)?%?$|^[0-9]+(?:\.[0-9]+)?[kK]$/.test(node.textContent.trim()))
+                .sort((a, b) => readTopValue(a) - readTopValue(b))[0];
+            const labelNode = allDivs
+                .filter((node) => {
+                    const text = node.textContent.trim();
+                    if (!text) {
+                        return false;
+                    }
+                    if (/^[0-9]+(?:\.[0-9]+)?%?$|^[0-9]+(?:\.[0-9]+)?[kK]$/.test(text)) {
+                        return false;
+                    }
+                    return readTopValue(node) >= 60;
+                })
+                .sort((a, b) => readTopValue(a) - readTopValue(b))[0];
+            if (valueNode) {
+                const valueText = `${cardData.value ?? 0}`;
+                const isPercent = valueText.includes('%');
+                const numericText = valueText.replace('%', '');
+                const fontSize = isPercent ? 26 : (numericText.length >= 3 ? 26 : 32);
+                valueNode.textContent = valueText;
+                valueNode.style.left = '50%';
+                valueNode.style.top = '24px';
+                valueNode.style.width = '70px';
+                valueNode.style.height = '45px';
+                valueNode.style.textAlign = 'center';
+                valueNode.style.lineHeight = `${fontSize + 6}px`;
+                valueNode.style.fontSize = `${fontSize}px`;
+                valueNode.style.color = '#66FFFF';
+                valueNode.classList.add('tech-number-jump');
+                valueNode.style.transform = 'translateX(-50%)';
+            }
+            if (labelNode) {
+                labelNode.innerHTML = toTwoLineLabel(cardData.label || '');
+                labelNode.style.left = '4px';
+                labelNode.style.top = '69px';
+                labelNode.style.width = '97px';
+                labelNode.style.textAlign = 'center';
+                labelNode.style.fontSize = '14px';
+                labelNode.style.lineHeight = '20px';
+                labelNode.style.color = 'white';
+            }
+        });
+
+        const taskCategoryData = Array.isArray(taskViewData.categories) ? taskViewData.categories : [];
+        const taskDataPanel = Array.from(document.querySelectorAll('[data-layer="数据"]'))
+            .find((node) => readTopValue(node) >= 900);
+        if (taskDataPanel && taskCategoryData.length > 0) {
+            const valueNodes = getLeafDivs(taskDataPanel)
+                .filter((node) => /^\d+$/.test(node.textContent.trim()))
+                .sort((a, b) => readLeftValue(a) - readLeftValue(b))
+                .slice(0, 6);
+            taskCategoryData.forEach((item, index) => {
+                if (valueNodes[index]) {
+                    valueNodes[index].textContent = `${item.value ?? 0}`;
+                }
+            });
+        }
+
+        const taskTagPanel = document.querySelector('[data-layer="标签"]');
+        if (taskTagPanel && taskCategoryData.length > 0) {
+            taskTagPanel.innerHTML = '';
+            taskTagPanel.style.display = 'grid';
+            taskTagPanel.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            taskTagPanel.style.gridRowGap = '8px';
+            taskTagPanel.style.columnGap = '10px';
+            taskTagPanel.style.alignItems = 'center';
+            taskTagPanel.style.height = '46px';
+            taskTagPanel.style.width = '430px';
+            taskTagPanel.style.left = '20px';
+
+            const dotColors = ['#66FFFF', '#48C8D6', '#1F91BE', '#036A5E', '#039181', '#16CEB9'];
+            taskCategoryData.slice(0, 6).forEach((item, index) => {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.gap = '8px';
+                row.style.whiteSpace = 'nowrap';
+
+                const dot = document.createElement('span');
+                dot.style.width = '9px';
+                dot.style.height = '9px';
+                dot.style.borderRadius = '9999px';
+                dot.style.background = dotColors[index % dotColors.length];
+                dot.style.display = 'inline-block';
+                dot.style.flex = '0 0 auto';
+
+                const text = document.createElement('span');
+                text.textContent = `${item.label} ${item.value ?? 0}`;
+                text.style.color = 'rgba(255, 255, 255, 0.86)';
+                text.style.fontSize = '12px';
+                text.style.lineHeight = '14px';
+                text.style.letterSpacing = '0.2px';
+                text.style.display = 'inline-block';
+
+                row.appendChild(dot);
+                row.appendChild(text);
+                taskTagPanel.appendChild(row);
+            });
+        }
+
+        // 为左侧预警概括指标添加动效环
+        const warningPanel = document.querySelector('[data-layer="预警概况"]');
+        if (warningPanel) {
+            const warningViewData = visualWarningOverview;
+            const warningTitleNode = getLeafDivs(warningPanel).find((node) => node.textContent.trim() === '预警概括');
+            if (warningTitleNode) {
+                warningTitleNode.textContent = warningViewData.title || '系统预警';
+            }
+            const warningRings = Array.isArray(warningViewData.rings) ? warningViewData.rings : [];
+            const ringColors = ['#4FE6F4', '#4FD8EE', '#3BB6E8'];
+            warningRings.forEach((ringData, index) => {
+                const ringNode = warningPanel.querySelector(`[data-layer="${ringData.container}"]`);
+                if (!ringNode) {
+                    return;
+                }
+                ringNode.style.position = 'absolute';
+                ringNode.style.overflow = 'visible';
+
+                // 添加三层光环
+                const ringBase = document.createElement('div');
+                ringBase.className = 'tech-side-ring-base';
+                const ringSweep = document.createElement('div');
+                ringSweep.className = 'tech-side-ring-sweep';
+                const ringTop = document.createElement('div');
+                ringTop.className = 'tech-side-ring-top';
+
+                const rect = ringNode.getBoundingClientRect();
+                // 假设 ringNode 自己就是个相对定位准确的容器，我们可以直接用中心定位
+                [ringBase, ringSweep, ringTop].forEach(ring => {
+                    ring.style.left = '50%';
+                    ring.style.top = '50%';
+                    ring.style.transform = 'translate(-50%, -50%)';
+                });
+                
+                // 由于预警环比右侧核心指标小，这里调整一下光环的大小系数
+                ringBase.style.width = `calc(100% + 4px)`;
+                ringBase.style.height = `calc(100% + 4px)`;
+                ringSweep.style.width = `calc(100% + 4px)`;
+                ringSweep.style.height = `calc(100% + 4px)`;
+                ringTop.style.width = `calc(100% + 12px)`;
+                ringTop.style.height = `calc(100% + 12px)`;
+
+                ringNode.appendChild(ringBase);
+                ringNode.appendChild(ringSweep);
+                ringNode.appendChild(ringTop);
+
+                const circleNodes = Array.from(ringNode.querySelectorAll('div[data-layer="椭圆形"]'));
+                if (circleNodes[0]) {
+                    circleNodes[0].style.background = '#0A1C43';
+                }
+                if (circleNodes[1]) {
+                    circleNodes[1].style.background = ringColors[index % ringColors.length];
+                }
+                if (circleNodes[2]) {
+                    circleNodes[2].style.border = `3.53px ${ringColors[index % ringColors.length]} solid`;
+                    circleNodes[2].style.opacity = '0.85';
+                }
+                Array.from(ringNode.querySelectorAll('div[data-layer="蒙版"]')).forEach((maskNode, maskIndex) => {
+                    if (maskIndex === 0) {
+                        maskNode.style.border = `5px ${ringColors[index % ringColors.length]} solid`;
+                        return;
+                    }
+                    maskNode.style.display = 'none';
+                });
+                Array.from(ringNode.querySelectorAll('div'))
+                    .filter((node) => node.children.length === 0 && node.textContent.trim().length > 0)
+                    .forEach((node) => {
+                        node.style.display = 'none';
+                    });
+
+                const oldOverlay = ringNode.querySelector('[data-role="warning-ring-overlay"]');
+                if (oldOverlay) {
+                    oldOverlay.remove();
+                }
+                const overlay = document.createElement('div');
+                overlay.setAttribute('data-role', 'warning-ring-overlay');
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.zIndex = '8';
+                overlay.style.pointerEvents = 'none';
+
+                const valueText = document.createElement('div');
+                valueText.textContent = `${ringData.value ?? 0}`;
+                valueText.style.color = '#00183A';
+                valueText.style.fontSize = `${`${ringData.value ?? ''}`.includes('%') ? 34 : 32}px`;
+                valueText.style.lineHeight = '1.05';
+                valueText.style.fontWeight = '500';
+                valueText.style.fontFamily = 'Abel, Source Han Sans CN, Microsoft YaHei, sans-serif';
+                valueText.style.letterSpacing = '0.2px';
+                valueText.style.marginTop = '2px';
+
+                const labelText = document.createElement('div');
+                labelText.textContent = ringData.label || '';
+                labelText.style.color = '#00183A';
+                labelText.style.fontSize = '12px';
+                labelText.style.lineHeight = '16px';
+                labelText.style.fontWeight = '600';
+                labelText.style.fontFamily = 'Source Han Sans CN, Microsoft YaHei, sans-serif';
+                labelText.style.marginTop = '6px';
+                labelText.style.textAlign = 'center';
+                labelText.style.whiteSpace = 'nowrap';
+
+                overlay.appendChild(valueText);
+                overlay.appendChild(labelText);
+                ringNode.appendChild(overlay);
+            });
+
+            const warningItems = Array.isArray(warningViewData.items) ? warningViewData.items : [];
+            const warningMessageNode = warningPanel.querySelector('div[data-layer^="预警位置："]')
+                || Array.from(warningPanel.querySelectorAll('div')).find((node) => node.textContent.includes('预警位置：'));
+            const warningTimeNode = warningPanel.querySelector('div[data-layer^="09.09 12:59"]')
+                || Array.from(warningPanel.querySelectorAll('div')).find((node) => node.textContent.includes('09.09 12:59'));
+            if (warningMessageNode && warningItems.length > 0) {
+                warningMessageNode.innerHTML = warningItems.map((item) => item.message || '').join('<br/>');
+                warningMessageNode.style.opacity = '0.82';
+                warningMessageNode.style.color = '#89ADF3';
+                warningMessageNode.style.lineHeight = '22px';
+            }
+            if (warningTimeNode && warningItems.length > 0) {
+                warningTimeNode.innerHTML = warningItems.map((item) => item.time || '').join('<br/>');
+                warningTimeNode.style.opacity = '0.82';
+                warningTimeNode.style.color = '#89ADF3';
+                warningTimeNode.style.lineHeight = '22px';
+            }
+        }
+
+        const todoMask = document.querySelector('[data-layer="todo-panel-mask"]') || document.querySelector('.DataLayerTodoPanelMask');
+        const todoScroll = document.querySelector('[data-layer="todo-panel-scroll"]') || document.querySelector('.DataLayerTodoPanelScroll');
+
+        if (todoMask && todoScroll) {
+            todoMask.setAttribute('data-layer', 'todo-panel-mask');
+            todoMask.style.overflow = 'hidden';
+            todoMask.style.paddingLeft = '0px';
+            todoMask.style.boxSizing = 'border-box';
+            todoScroll.setAttribute('data-layer', 'todo-panel-scroll');
+            todoScroll.style.overflowY = 'auto';
+            todoScroll.style.overflowX = 'hidden';
+            todoScroll.style.position = 'relative';
+            todoScroll.style.paddingLeft = '0px';
+            todoScroll.style.boxSizing = 'border-box';
+            todoScroll.style.width = '100%';
+
+            Array.from(todoScroll.querySelectorAll('[data-layer="todo-card-item"], .DataLayerTodoCardItem')).forEach((card) => {
+                card.style.left = '0px';
+                card.style.width = '100%';
+                card.style.overflow = 'visible';
+                Array.from(card.querySelectorAll('div')).forEach((node) => {
+                    const left = Number.parseFloat(node.style.left || '0');
+                    if (!Number.isNaN(left) && left < 0) {
+                        node.style.left = '0px';
+                    }
+                });
+            });
+
+            const titleNode = Array.from(document.querySelectorAll('div')).find((node) => node.children.length === 0 && node.textContent.trim() === '任务代办');
+            const panelContainer = (() => {
+                if (!titleNode) {
+                    return document;
+                }
+                let current = titleNode.parentElement;
+                while (current) {
+                    if (current.contains(todoMask)) {
+                        return current;
+                    }
+                    current = current.parentElement;
+                }
+                return document;
+            })();
+
+            const allButtonNodes = Array.from(panelContainer.querySelectorAll('.Botton'));
+            const newButton = allButtonNodes.find((node) => node.textContent.includes('新建'));
+            const publishButton = allButtonNodes.find((node) => node.textContent.includes('发布'));
+            let deleteButton = null;
+            let deleteButtonText = null;
+
+            const readTop = (el) => {
+                const top = Number.parseFloat(el.style.top || '0');
+                return Number.isNaN(top) ? 0 : top;
+            };
+
+            const readHeight = (el) => {
+                const h = Number.parseFloat(el.style.height || '0');
+                return Number.isNaN(h) ? el.getBoundingClientRect().height : h;
+            };
+
+            const setButtonText = (button, text) => {
+                if (!button) {
+                    return;
+                }
+                const textNode = Array.from(button.querySelectorAll('div')).find((node) => node.children.length === 0 && node.textContent.trim().length > 0);
+                if (textNode) {
+                    textNode.textContent = text;
+                }
+            };
+
+            if (newButton) {
+                newButton.setAttribute('data-layer', 'todo-btn-new');
+                newButton.style.cursor = 'pointer';
+                newButton.classList.add('interactive-element');
+            }
+
+            if (publishButton) {
+                publishButton.setAttribute('data-layer', 'todo-btn-publish');
+                publishButton.style.cursor = 'pointer';
+                publishButton.classList.add('interactive-element');
+            }
+
+            const oldTeamBtn = document.querySelector('[data-layer="team-overview-btn"]');
+            if (oldTeamBtn) {
+                oldTeamBtn.remove();
+            }
+            const sourceButton = publishButton || newButton;
+            const dashboardRoot = document.querySelector('.figma-home-wrapper > div[data-layer]');
+            if (sourceButton && dashboardRoot) {
+                const teamButton = sourceButton.cloneNode(true);
+                teamButton.setAttribute('data-layer', 'team-overview-btn');
+                teamButton.style.position = 'absolute';
+                teamButton.style.left = '391px';
+                teamButton.style.top = '125px';
+                teamButton.style.width = sourceButton.style.width || '73px';
+                teamButton.style.height = sourceButton.style.height || '31px';
+                teamButton.style.cursor = 'pointer';
+                teamButton.classList.add('interactive-element');
+                const textNode = Array.from(teamButton.querySelectorAll('div'))
+                    .find((node) => node.children.length === 0 && node.textContent.trim().length > 0);
+                if (textNode) {
+                    textNode.textContent = '管理';
+                }
+                teamButton.addEventListener('click', () => {
+                    window.location.href = '{{ url_for("patient_portal") }}';
+                });
+                dashboardRoot.appendChild(teamButton);
+            }
+
+            if (newButton) {
+                deleteButton = newButton.cloneNode(true);
+                deleteButton.setAttribute('data-layer', 'todo-btn-delete');
+                deleteButton.style.cursor = 'pointer';
+                deleteButton.classList.add('interactive-element');
+                const newLeft = Number.parseFloat(newButton.style.left || '0');
+                const deleteLeft = Number.isNaN(newLeft) ? 0 : newLeft - 72;
+                deleteButton.style.left = `${deleteLeft}px`;
+                setButtonText(deleteButton, '删除');
+                deleteButtonText = Array.from(deleteButton.querySelectorAll('div')).find((node) => node.children.length === 0 && node.textContent.trim().length > 0);
+                newButton.parentElement.appendChild(deleteButton);
+            }
+
+            const seedCards = Array.from(todoScroll.querySelectorAll('.DataLayerTodoCardItem')).sort((a, b) => readTop(a) - readTop(b));
+            const cardTemplate = seedCards[0].cloneNode(true);
+            const baselineTop = readTop(seedCards[0]);
+            const secondCard = seedCards[1];
+            const cardHeight = readHeight(seedCards[0]);
+            const cardStep = secondCard ? readTop(secondCard) - readTop(seedCards[0]) : cardHeight + 10;
+            seedCards.forEach((card) => card.remove());
+
+            const state = {
+                todos: [],
+                doctors: [],
+                loading: false,
+                deleteMode: false,
+                deleteConfirmOpen: false,
+                selectedTodoId: null,
+                draftOpen: false,
+                draft: {
+                    taskName: '',
+                    assigneeId: '',
+                    content: '',
+                    deadline: '',
+                    activeTab: 'taskName'
+                }
+            };
+
+            const setCardValues = (card, values) => {
+                const leafDivs = Array.from(card.querySelectorAll('div')).filter((el) => el.children.length === 0);
+                const setByExact = (source, target) => {
+                    const node = leafDivs.find((el) => el.textContent.trim() === source);
+                    if (node) {
+                        node.textContent = target;
+                    }
+                    return node || null;
+                };
+                const getNearestByLabel = (labelText, textPredicate) => {
+                    const labelNode = leafDivs.find((el) => el.textContent.trim() === labelText);
+                    if (!labelNode) {
+                        return null;
+                    }
+                    const labelRect = labelNode.getBoundingClientRect();
+                    const candidates = leafDivs.filter((el) => textPredicate(el.textContent.trim()));
+                    if (candidates.length === 0) {
+                        return null;
+                    }
+                    const distance = (rectA, rectB) => {
+                        const ax = rectA.left + rectA.width / 2;
+                        const ay = rectA.top + rectA.height / 2;
+                        const bx = rectB.left + rectB.width / 2;
+                        const by = rectB.top + rectB.height / 2;
+                        return Math.hypot(ax - bx, ay - by);
+                    };
+                    return candidates
+                        .sort((a, b) => distance(labelRect, a.getBoundingClientRect()) - distance(labelRect, b.getBoundingClientRect()))[0];
+                };
+                setByExact('提供样本', values.taskName);
+                setByExact('完成现阶段样本提供指标', values.content);
+                let assigneeNode = setByExact('docter1', values.assignee) || setByExact('doctor1', values.assignee);
+                if (!assigneeNode) {
+                    assigneeNode = getNearestByLabel('接收者', (text) => /^(?:doctor|docter)\d+$/i.test(text) || text.startsWith('doctor') || text.startsWith('docter'));
+                    if (assigneeNode) {
+                        assigneeNode.textContent = values.assignee;
+                    }
+                }
+                setByExact('26-05-10', values.deadline);
+                if (assigneeNode) {
+                    assigneeNode.style.left = '0px';
+                    assigneeNode.style.top = '10px';
+                    assigneeNode.style.fontSize = '12px';
+                    assigneeNode.style.lineHeight = '14px';
+                    assigneeNode.style.width = '76px';
+                    assigneeNode.style.textAlign = 'center';
+                    assigneeNode.style.fontFamily = 'Source Han Sans CN, Arial, sans-serif';
+                    assigneeNode.style.whiteSpace = 'nowrap';
+                    assigneeNode.style.overflow = 'hidden';
+                }
+            };
+
+            const applyCardVisual = (card, mode) => {
+                card.style.transform = mode === 'pressed' ? 'scale(0.985)' : 'scale(1)';
+                card.style.transition = 'transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease';
+                if (mode === 'selected') {
+                    card.style.filter = 'brightness(1.24)';
+                    card.style.boxShadow = '0 0 0 2px #23fff9 inset, 0 0 18px rgba(35,255,249,0.55), 0 0 0 1px rgba(35,255,249,0.9)';
+                    card.style.outline = '2px solid rgba(35,255,249,0.95)';
+                    card.style.outlineOffset = '1px';
+                } else if (mode === 'hover') {
+                    card.style.filter = 'brightness(1.12)';
+                    card.style.boxShadow = '0 0 0 1px rgba(35,255,249,0.45) inset';
+                    card.style.outline = '1px solid rgba(35,255,249,0.5)';
+                    card.style.outlineOffset = '1px';
+                } else {
+                    card.style.filter = '';
+                    card.style.boxShadow = '';
+                    card.style.outline = '';
+                    card.style.outlineOffset = '';
+                }
+            };
+
+            const clearCardSelection = () => {
+                state.selectedTodoId = null;
+                Array.from(todoScroll.querySelectorAll('.todo-runtime-card')).forEach((card) => {
+                    applyCardVisual(card, 'normal');
+                });
+            };
+
+            const updateSelectedVisual = () => {
+                Array.from(todoScroll.querySelectorAll('.todo-runtime-card')).forEach((card) => {
+                    const todoId = Number.parseInt(card.dataset.todoId || '0', 10);
+                    if (state.deleteMode && state.selectedTodoId === todoId) {
+                        applyCardVisual(card, 'selected');
+                    } else {
+                        applyCardVisual(card, 'normal');
+                    }
+                });
+            };
+
+            const renderDeleteButtonState = () => {
+                if (!deleteButton) {
+                    return;
+                }
+                deleteButton.style.filter = state.deleteMode ? 'brightness(1.2)' : '';
+                if (deleteButtonText) {
+                    deleteButtonText.textContent = '删除';
+                }
+            };
+
+            const readJson = async (response) => {
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    return await response.json();
+                }
+                const text = await response.text();
+                throw new Error(text ? '接口返回非JSON' : '接口不可用');
+            };
+
+            const apiLoad = async () => {
+                const response = await fetch('/api/main-todos', { headers: { 'Accept': 'application/json' } });
+                const data = await readJson(response);
+                if (!response.ok || !data || data.ok === false) {
+                    throw new Error((data && data.message) || '读取待办失败');
+                }
+                state.todos = data.todos || [];
+                state.doctors = data.doctors || [];
+            };
+
+            const apiCreate = async () => {
+                const payload = {
+                    task_name: state.draft.taskName,
+                    content: state.draft.content,
+                    deadline: state.draft.deadline,
+                    assignee_id: state.draft.assigneeId
+                };
+                const response = await fetch('/api/main-todos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await readJson(response);
+                if (!response.ok || !data || data.ok === false) {
+                    throw new Error((data && data.message) || '发布失败');
+                }
+                return data.todo;
+            };
+
+            const apiDelete = async (todoId) => {
+                const response = await fetch(`/api/main-todos/${todoId}`, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await readJson(response);
+                if (!response.ok || !data || data.ok === false) {
+                    throw new Error((data && data.message) || '删除失败');
+                }
+            };
+
+            const deleteSelectedTodo = async () => {
+                if (!state.deleteMode || state.loading) {
+                    return;
+                }
+                const todoId = Number.parseInt(state.selectedTodoId || '0', 10);
+                if (!todoId) {
+                    return;
+                }
+                state.loading = true;
+                try {
+                    await apiDelete(todoId);
+                    state.todos = state.todos.filter((item) => item.id !== todoId);
+                    state.selectedTodoId = null;
+                    renderCards();
+                } catch (err) {
+                    alert(err.message || '删除失败');
+                } finally {
+                    state.loading = false;
+                }
+            };
+            let deleteConfirmOverlayNode = null;
+            const ensureDeleteConfirmOverlay = () => {
+                if (deleteConfirmOverlayNode && deleteConfirmOverlayNode.parentElement === document.body) {
+                    return deleteConfirmOverlayNode;
+                }
+                const overlay = document.createElement('div');
+                overlay.setAttribute('data-layer', 'todo-delete-confirm-overlay');
+                overlay.style.position = 'fixed';
+                overlay.style.left = '0';
+                overlay.style.top = '0';
+                overlay.style.width = '100vw';
+                overlay.style.height = '100vh';
+                overlay.style.display = 'none';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(2, 8, 26, 0.62)';
+                overlay.style.backdropFilter = 'blur(1px)';
+                overlay.style.zIndex = '10001';
+                const dialog = document.createElement('div');
+                dialog.style.width = '420px';
+                dialog.style.border = '1px solid rgba(108, 232, 255, 0.78)';
+                dialog.style.borderRadius = '10px';
+                dialog.style.background = 'linear-gradient(180deg, rgba(8, 27, 64, 0.96), rgba(5, 18, 46, 0.98))';
+                dialog.style.boxShadow = '0 0 20px rgba(30, 172, 255, 0.28)';
+                dialog.style.padding = '18px 20px 16px';
+                dialog.innerHTML = '<div style="color:#DDF6FF;font-size:20px;line-height:26px;">确认删除当前待办吗？</div><div style="color:rgba(188,223,255,0.86);font-size:14px;margin-top:8px;">删除后不可恢复，请再次确认操作。</div>';
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.justifyContent = 'flex-end';
+                actions.style.gap = '12px';
+                actions.style.marginTop = '16px';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.setAttribute('data-role', 'todo-delete-cancel');
+                cancelBtn.textContent = '取消';
+                cancelBtn.style.width = '86px';
+                cancelBtn.style.height = '34px';
+                cancelBtn.style.border = '1px solid rgba(111, 208, 255, 0.5)';
+                cancelBtn.style.borderRadius = '6px';
+                cancelBtn.style.background = 'rgba(13, 51, 103, 0.56)';
+                cancelBtn.style.color = '#D7F1FF';
+                cancelBtn.style.cursor = 'pointer';
+                const confirmBtn = document.createElement('button');
+                confirmBtn.type = 'button';
+                confirmBtn.setAttribute('data-role', 'todo-delete-confirm');
+                confirmBtn.textContent = '确认删除';
+                confirmBtn.style.width = '104px';
+                confirmBtn.style.height = '34px';
+                confirmBtn.style.border = '1px solid rgba(255, 133, 133, 0.7)';
+                confirmBtn.style.borderRadius = '6px';
+                confirmBtn.style.background = 'linear-gradient(180deg, rgba(156, 36, 54, 0.86), rgba(116, 20, 35, 0.9))';
+                confirmBtn.style.color = '#FFE9EE';
+                confirmBtn.style.cursor = 'pointer';
+                actions.appendChild(cancelBtn);
+                actions.appendChild(confirmBtn);
+                dialog.appendChild(actions);
+                overlay.appendChild(dialog);
+                overlay.addEventListener('click', (event) => {
+                    if (event.target === overlay) {
+                        closeDeleteConfirm();
+                    }
+                });
+                document.body.appendChild(overlay);
+                deleteConfirmOverlayNode = overlay;
+                return overlay;
+            };
+            const closeDeleteConfirm = () => {
+                const overlay = ensureDeleteConfirmOverlay();
+                overlay.style.display = 'none';
+                state.deleteConfirmOpen = false;
+            };
+            const openDeleteConfirm = () => {
+                if (!state.deleteMode || state.loading) {
+                    return;
+                }
+                const todoId = Number.parseInt(state.selectedTodoId || '0', 10);
+                if (!todoId) {
+                    alert('请先选中一条待办，再执行删除');
+                    return;
+                }
+                const overlay = ensureDeleteConfirmOverlay();
+                const cancelBtn = overlay.querySelector('[data-role="todo-delete-cancel"]');
+                const confirmBtn = overlay.querySelector('[data-role="todo-delete-confirm"]');
+                if (cancelBtn) {
+                    cancelBtn.onclick = () => closeDeleteConfirm();
+                }
+                if (confirmBtn) {
+                    confirmBtn.onclick = async () => {
+                        closeDeleteConfirm();
+                        await deleteSelectedTodo();
+                    };
+                }
+                overlay.style.display = 'flex';
+                state.deleteConfirmOpen = true;
+            };
+
+            const renderDraftOverlay = (card) => {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.zIndex = '20';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(2, 11, 42, 0.78)';
+                overlay.style.backdropFilter = 'blur(1px)';
+
+                const panel = document.createElement('div');
+                panel.style.width = '436px';
+                panel.style.display = 'flex';
+                panel.style.alignItems = 'center';
+                panel.style.gap = '8px';
+                panel.style.padding = '0 8px';
+                overlay.appendChild(panel);
+
+                const createTab = (key, text) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.dataset.tab = key;
+                    btn.textContent = text;
+                    btn.style.height = '30px';
+                    btn.style.padding = '0 8px';
+                    btn.style.background = '#06355a';
+                    btn.style.border = '1px solid #23fff9';
+                    btn.style.color = '#66ffff';
+                    btn.style.cursor = 'pointer';
+                    return btn;
+                };
+
+                const createInput = (key, element) => {
+                    element.dataset.input = key;
+                    element.style.height = '30px';
+                    element.style.background = 'rgba(2,16,50,0.9)';
+                    element.style.border = '1px solid #4b8dde';
+                    element.style.color = '#fff';
+                    element.style.padding = '0 8px';
+                    return element;
+                };
+
+                const tabTaskName = createTab('taskName', '任务名');
+                const tabDoctor = createTab('doctor', '医生');
+                const tabText = createTab('content', '文本');
+                const tabDate = createTab('deadline', '日期');
+                panel.appendChild(tabTaskName);
+                panel.appendChild(tabDoctor);
+                panel.appendChild(tabText);
+                panel.appendChild(tabDate);
+
+                const inputTaskName = createInput('taskName', document.createElement('input'));
+                inputTaskName.placeholder = '输入任务名';
+                inputTaskName.style.width = '102px';
+                inputTaskName.value = state.draft.taskName;
+
+                const inputDoctor = createInput('doctor', document.createElement('select'));
+                inputDoctor.style.width = '95px';
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.textContent = '医生';
+                inputDoctor.appendChild(emptyOption);
+                state.doctors.forEach((doctor) => {
+                    const option = document.createElement('option');
+                    option.value = String(doctor.id);
+                    option.textContent = doctor.username;
+                    inputDoctor.appendChild(option);
+                });
+                inputDoctor.value = state.draft.assigneeId ? String(state.draft.assigneeId) : '';
+
+                const inputText = createInput('content', document.createElement('input'));
+                inputText.placeholder = '输入任务文本';
+                inputText.style.width = '128px';
+                inputText.value = state.draft.content;
+
+                const inputDate = createInput('deadline', document.createElement('input'));
+                inputDate.type = 'date';
+                inputDate.style.width = '90px';
+                inputDate.value = state.draft.deadline;
+                inputDate.readOnly = false;
+
+                const datePickerBtn = document.createElement('button');
+                datePickerBtn.type = 'button';
+                datePickerBtn.textContent = '📅';
+                datePickerBtn.style.height = '30px';
+                datePickerBtn.style.width = '30px';
+                datePickerBtn.style.padding = '0';
+                datePickerBtn.style.background = '#06355a';
+                datePickerBtn.style.border = '1px solid #23fff9';
+                datePickerBtn.style.color = '#66ffff';
+                datePickerBtn.style.cursor = 'pointer';
+                datePickerBtn.style.display = 'none';
+                datePickerBtn.addEventListener('click', () => {
+                    inputDate.focus();
+                    if (typeof inputDate.showPicker === 'function') {
+                        inputDate.showPicker();
+                    }
+                });
+
+                panel.appendChild(inputTaskName);
+                panel.appendChild(inputDoctor);
+                panel.appendChild(inputText);
+                panel.appendChild(inputDate);
+                panel.appendChild(datePickerBtn);
+
+                const tabs = [tabTaskName, tabDoctor, tabText, tabDate];
+                const inputs = {
+                    taskName: inputTaskName,
+                    doctor: inputDoctor,
+                    content: inputText,
+                    deadline: inputDate
+                };
+
+                const switchTab = (tabKey) => {
+                    state.draft.activeTab = tabKey;
+                    Object.entries(inputs).forEach(([key, input]) => {
+                        input.style.display = key === tabKey ? 'block' : 'none';
+                    });
+                    datePickerBtn.style.display = tabKey === 'deadline' ? 'block' : 'none';
+                    tabs.forEach((tab) => {
+                        tab.style.filter = tab.dataset.tab === tabKey ? 'brightness(1.22)' : '';
+                    });
+                    inputs[tabKey].focus();
+                };
+
+                tabTaskName.addEventListener('click', () => switchTab('taskName'));
+                tabDoctor.addEventListener('click', () => switchTab('doctor'));
+                tabText.addEventListener('click', () => switchTab('content'));
+                tabDate.addEventListener('click', () => switchTab('deadline'));
+
+                inputTaskName.addEventListener('input', () => {
+                    state.draft.taskName = inputTaskName.value;
+                });
+                inputDoctor.addEventListener('change', () => {
+                    state.draft.assigneeId = inputDoctor.value;
+                });
+                inputText.addEventListener('input', () => {
+                    state.draft.content = inputText.value;
+                });
+                inputDate.addEventListener('change', () => {
+                    state.draft.deadline = inputDate.value;
+                });
+                inputText.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' && event.ctrlKey) {
+                        publishTodo();
+                    }
+                });
+
+                switchTab(state.draft.activeTab || 'taskName');
+                card.appendChild(overlay);
+            };
+
+            const buildCard = (todo, index, isDraft) => {
+                const card = cardTemplate.cloneNode(true);
+                card.classList.add('todo-runtime-card');
+                card.style.position = 'absolute';
+                card.style.top = `${baselineTop + cardStep * index}px`;
+                card.style.left = '0px';
+                card.style.transform = 'scale(1)';
+                card.dataset.todoId = isDraft ? '' : String(todo.id);
+                card.dataset.isDraft = isDraft ? '1' : '0';
+                card.setAttribute('data-layer', isDraft ? 'todo-card-draft' : 'todo-card-item');
+                setCardValues(card, {
+                    taskName: todo.task_name || '',
+                    content: todo.content || '',
+                    assignee: todo.assignee_name || '',
+                    deadline: todo.deadline || ''
+                });
+                Array.from(card.querySelectorAll('div')).forEach((node) => {
+                    const left = Number.parseFloat(node.style.left || '0');
+                    if (!Number.isNaN(left) && left < 0) {
+                        node.style.left = '0px';
+                    }
+                });
+
+                // 任务列表状态竖线
+                const statusLine = document.createElement('div');
+                statusLine.className = 'task-status-line';
+                // 根据索引或日期分配颜色
+                const statusColors = ['status-green', 'status-yellow', 'status-red'];
+                statusLine.classList.add(statusColors[index % 3]);
+                statusLine.style.left = '0px';
+                card.appendChild(statusLine);
+
+                if (isDraft) {
+                    renderDraftOverlay(card);
+                    return card;
+                }
+
+                card.addEventListener('mouseenter', () => {
+                    if (!state.deleteMode) {
+                        return;
+                    }
+                    const todoId = Number.parseInt(card.dataset.todoId || '0', 10);
+                    if (state.selectedTodoId === todoId) {
+                        return;
+                    }
+                    applyCardVisual(card, 'hover');
+                });
+                card.addEventListener('mouseleave', () => {
+                    if (!state.deleteMode) {
+                        return;
+                    }
+                    const todoId = Number.parseInt(card.dataset.todoId || '0', 10);
+                    if (state.selectedTodoId === todoId) {
+                        applyCardVisual(card, 'selected');
+                        return;
+                    }
+                    applyCardVisual(card, 'normal');
+                });
+                card.addEventListener('mousedown', () => {
+                    if (!state.deleteMode) {
+                        return;
+                    }
+                    applyCardVisual(card, 'pressed');
+                });
+                card.addEventListener('mouseup', () => {
+                    if (!state.deleteMode) {
+                        return;
+                    }
+                    const todoId = Number.parseInt(card.dataset.todoId || '0', 10);
+                    if (state.selectedTodoId === todoId) {
+                        applyCardVisual(card, 'selected');
+                    } else {
+                        applyCardVisual(card, 'hover');
+                    }
+                });
+                card.addEventListener('click', async () => {
+                    if (!state.deleteMode || state.loading) {
+                        return;
+                    }
+                    const todoId = Number.parseInt(card.dataset.todoId || '0', 10);
+                    if (!todoId) {
+                        return;
+                    }
+                    state.selectedTodoId = todoId;
+                    updateSelectedVisual();
+                    openDeleteConfirm();
+                });
+                return card;
+            };
+
+            const renderCards = () => {
+                Array.from(todoScroll.querySelectorAll('.todo-runtime-card')).forEach((card) => card.remove());
+                const rows = [];
+                if (state.draftOpen) {
+                    rows.push({
+                        id: null,
+                        task_name: state.draft.taskName || '提供样本',
+                        content: state.draft.content || '完成现阶段样本提供指标',
+                        assignee_name: (() => {
+                            const doctor = state.doctors.find((item) => String(item.id) === String(state.draft.assigneeId));
+                            return doctor ? doctor.username : 'doctor1';
+                        })(),
+                        deadline: state.draft.deadline ? state.draft.deadline.slice(2).replace(/-/g, '-') : '26-05-10',
+                        is_draft: true
+                    });
+                }
+                rows.push(...state.todos.map((item) => ({ ...item, is_draft: false })));
+                rows.forEach((row, index) => {
+                    const card = buildCard(row, index, row.is_draft);
+                    todoScroll.appendChild(card);
+                });
+                updateSelectedVisual();
+                renderDeleteButtonState();
+            };
+
+            const cancelDeleteMode = () => {
+                state.deleteMode = false;
+                clearCardSelection();
+                renderDeleteButtonState();
+                renderCards();
+            };
+
+            const cancelDraftMode = () => {
+                state.draftOpen = false;
+                state.draft = { taskName: '', assigneeId: '', content: '', deadline: '', activeTab: 'taskName' };
+                renderCards();
+            };
+
+            const openDraft = () => {
+                state.draftOpen = true;
+                state.draft.activeTab = 'taskName';
+                state.deleteMode = false;
+                state.selectedTodoId = null;
+                renderCards();
+            };
+
+            const publishTodo = async () => {
+                if (!state.draftOpen || state.loading) {
+                    return;
+                }
+                if (!state.draft.taskName.trim() || !state.draft.content.trim() || !state.draft.deadline.trim() || !state.draft.assigneeId) {
+                    alert('请先输入任务名、医生、文本和日期后再发布');
+                    return;
+                }
+                state.loading = true;
+                try {
+                    const created = await apiCreate();
+                    state.todos.unshift(created);
+                    state.draftOpen = false;
+                    state.draft = { taskName: '', assigneeId: '', content: '', deadline: '', activeTab: 'taskName' };
+                    state.deleteMode = false;
+                    state.selectedTodoId = null;
+                    todoScroll.scrollTop = 0;
+                    renderCards();
+                } catch (err) {
+                    alert(err.message || '发布失败');
+                } finally {
+                    state.loading = false;
+                }
+            };
+
+            if (newButton) {
+                newButton.addEventListener('click', openDraft);
+            }
+
+            if (publishButton) {
+                publishButton.addEventListener('click', publishTodo);
+            }
+
+            if (deleteButton) {
+                deleteButton.addEventListener('click', async () => {
+                    if (state.deleteMode) {
+                        openDeleteConfirm();
+                        return;
+                    }
+                    state.deleteMode = true;
+                    state.selectedTodoId = null;
+                    state.draftOpen = false;
+                    renderCards();
+                });
+            }
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    if (state.deleteConfirmOpen) {
+                        closeDeleteConfirm();
+                    } else if (state.deleteMode) {
+                        cancelDeleteMode();
+                    } else if (state.draftOpen) {
+                        cancelDraftMode();
+                    }
+                } else if (event.key === 'Delete') {
+                    if (state.deleteMode) {
+                        event.preventDefault();
+                        openDeleteConfirm();
+                    }
+                }
+            });
+
+            document.addEventListener('click', (event) => {
+                const target = event.target;
+                if (!(target instanceof Element)) {
+                    return;
+                }
+                const insideTodoArea = Boolean(target.closest(
+                    '[data-layer="todo-panel-mask"],[data-layer="todo-panel-scroll"],[data-layer="todo-btn-new"],[data-layer="todo-btn-publish"],[data-layer="todo-btn-delete"],.todo-runtime-card,[data-layer="todo-card-draft"],[data-layer="todo-delete-confirm-overlay"]'
+                ));
+                if (!insideTodoArea) {
+                    if (state.deleteConfirmOpen) {
+                        closeDeleteConfirm();
+                    }
+                    if (state.deleteMode) {
+                        cancelDeleteMode();
+                    }
+                    if (state.draftOpen) {
+                        cancelDraftMode();
+                    }
+                }
+            });
+
+            todoMask.addEventListener('wheel', (event) => {
+                todoScroll.scrollTop += event.deltaY;
+                event.preventDefault();
+            }, { passive: false });
+
+            apiLoad()
+                .then(() => {
+                    renderCards();
+                })
+                .catch((err) => {
+                    renderCards();
+                });
+        }
+    </script>
+</body>
+</html>

@@ -73,9 +73,12 @@
                                 <span>诊断医生: {{ diagnosis.doctor_name }}</span>
                             </div>
                             <div class="sheet-actions">
+                                <a href="{{ url_for('edit_diagnosis', diagnosis_id=diagnosis.id) }}" class="btn btn-warning btn-sm">编辑诊断</a>
+                                <a href="{{ url_for('edit_patient_clinical_info', patient_id=patient.id) }}" class="btn btn-secondary btn-sm">临床信息</a>
                                 <a href="{{ url_for('view_images', diagnosis_id=diagnosis.id) }}" class="btn btn-info btn-sm">查看图片</a>
-                                <button type="button" class="btn btn-success btn-sm" onclick="openSmartAnalysis({{ diagnosis.id }}, '{{ diagnosis.diagnosis_content }}')">智能分析</button>
-                                {% if current_user.role == 'admin' or current_user.id == diagnosis.doctor_id %}
+                                <a href="{{ url_for('remote_test', diagnosis_id=diagnosis.id) }}" class="btn btn-primary btn-sm">远程分割</a>
+                                <button type="button" class="btn btn-success btn-sm" onclick="runAgentAnalysis({{ diagnosis.id }})">智能分析</button>
+                                {% if current_user.role == 'admin' %}
                                     <form method="POST" action="{{ url_for('delete_diagnosis', diagnosis_id=diagnosis.id) }}" style="display: inline;">
                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除这个诊断记录吗？相关图片也会被删除。')">删除记录</button>
                                     </form>
@@ -87,133 +90,124 @@
             </div>
         </div>
     </div>
-    <!-- 智能分析模态窗口 -->
-    <div id="smartAnalysisModal" class="modal">
+    <div id="agentAnalysisModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>智能辅助分析</h2>
-                <span class="close">&times;</span>
+                <span class="close" id="closeAgentModal">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="analysis-section">
-                    <h3>诊断内容</h3>
-                    <p id="diagnosisContentDisplay"></p>
+                    <h3>智能分析摘要</h3>
+                    <p id="agentAnalysisSummary"></p>
                 </div>
                 <div class="analysis-section">
-                    <h3>智能分析结果</h3>
-                    <div id="analysisResult"></div>
+                    <h3>严重程度</h3>
+                    <p id="agentSeverity"></p>
+                </div>
+                <div class="analysis-section">
+                    <h3>建议</h3>
+                    <p id="agentRecommendation"></p>
+                </div>
+                <div class="analysis-section" id="agentDebateSection" style="display:none;">
+                    <h3>多专家博弈过程</h3>
+                    <pre id="agentDebatePre" style="white-space:pre-wrap;word-wrap:break-word;"></pre>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="closeModalBtn" class="btn btn-secondary">关闭</button>
+                <button id="agentDebateBtn" class="btn btn-primary">Debate</button>
+                <button id="closeAgentModalBtn" class="btn btn-secondary">关闭</button>
             </div>
         </div>
     </div>
-
-    <!-- 智能分析功能的JavaScript代码 -->
     <script>
-        // 模态窗口相关元素
-        const modal = document.getElementById('smartAnalysisModal');
-        const closeModal = document.getElementsByClassName('close')[0];
-        const closeModalBtn = document.getElementById('closeModalBtn');
+        const agentModal = document.getElementById('agentAnalysisModal');
+        const closeAgentModal = document.getElementById('closeAgentModal');
+        const closeAgentModalBtn = document.getElementById('closeAgentModalBtn');
+        const agentSummaryEl = document.getElementById('agentAnalysisSummary');
+        const agentSeverityEl = document.getElementById('agentSeverity');
+        const agentRecommendationEl = document.getElementById('agentRecommendation');
+        const agentDebateBtn = document.getElementById('agentDebateBtn');
+        const agentDebateSection = document.getElementById('agentDebateSection');
+        const agentDebatePre = document.getElementById('agentDebatePre');
+        let lastDiagnosisId = null;
 
-        // 关闭模态窗口的函数
-        function closeSmartAnalysisModal() {
-            modal.style.display = 'none';
+        function hideAgentModal() {
+            agentModal.style.display = 'none';
         }
 
-        // 点击关闭按钮或模态窗口外部关闭模态窗口
-        closeModal.onclick = closeSmartAnalysisModal;
-        closeModalBtn.onclick = closeSmartAnalysisModal;
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeSmartAnalysisModal();
+        closeAgentModal.onclick = hideAgentModal;
+        closeAgentModalBtn.onclick = hideAgentModal;
+        window.addEventListener('click', function (event) {
+            if (event.target === agentModal) {
+                hideAgentModal();
             }
+        });
+
+        function runAgentAnalysis(diagnosisId) {
+            agentSummaryEl.textContent = '智能分析中，请稍候...';
+            agentSeverityEl.textContent = '';
+            agentRecommendationEl.textContent = '';
+            agentDebateSection.style.display = 'none';
+            agentDebatePre.textContent = '';
+            lastDiagnosisId = diagnosisId;
+            agentModal.style.display = 'block';
+            const urlTemplate = "{{ url_for('run_agent_analysis_api', diagnosis_id=0) }}";
+            const url = urlTemplate.replace('0', diagnosisId);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  if (!data.success) {
+                      agentSummaryEl.textContent = data.message || '智能分析失败';
+                      return;
+                  }
+                  const result = data.data || {};
+                  agentSummaryEl.textContent = result.tumor_analysis || '暂无分析结果';
+                  agentSeverityEl.textContent = result.severity_assessment || '未知';
+                  agentRecommendationEl.textContent = result.recommendation || '暂无建议';
+              }).catch(err => {
+                  agentSummaryEl.textContent = '请求智能分析时发生错误';
+              });
         }
 
-        // 智能分析函数
-        function openSmartAnalysis(diagnosisId, diagnosisContent) {
-            // 显示诊断内容
-            const diagnosisContentDisplay = document.getElementById('diagnosisContentDisplay');
-            diagnosisContentDisplay.textContent = diagnosisContent;
-
-            // 清空之前的分析结果
-            const analysisResult = document.getElementById('analysisResult');
-            analysisResult.innerHTML = '';
-
-            // 检查诊断内容是否为空
-            if (!diagnosisContent || diagnosisContent.trim() === '') {
-                alert('诊断内容不能为空，请先完善诊断信息！');
+        agentDebateBtn.addEventListener('click', function () {
+            if (!lastDiagnosisId) {
+                agentDebateSection.style.display = 'block';
+                agentDebatePre.textContent = '暂无可用的诊断ID';
                 return;
             }
-
-            // 模拟模型服务不可用的情况（10%概率）
-            const serviceUnavailable = Math.random() < 0.1;
-            if (serviceUnavailable) {
-                // 显示服务不可用提示
-                analysisResult.innerHTML = '<div class="error-message">模型服务暂时不可用，请稍后再试。</div>';
-                modal.style.display = 'block';
-                return;
-            }
-
-            // 生成模拟的治疗方案
-            let treatmentPlan = generateSimulatedTreatmentPlan(diagnosisContent);
-            
-            // 显示分析结果
-            analysisResult.innerHTML = '<div class="treatment-plan">' + treatmentPlan + '</div>';
-            
-            // 显示模态窗口
-            modal.style.display = 'block';
-        }
-
-        // 生成模拟的治疗方案
-        function generateSimulatedTreatmentPlan(diagnosisContent) {
-            // 检查诊断内容长度（简短病历文本分析）
-            const isShortText = diagnosisContent.length < 50;
-            
-            // 基础治疗方案模板
-            let plan = '';
-            
-            if (isShortText) {
-                // 简短病历文本的处理
-                plan = '<p><strong>注意：</strong>诊断内容较为简短，基于现有信息生成以下建议：</p>';
-            } else {
-                // 正常病历文本的处理
-                plan = '<p>基于您提供的详细诊断信息，生成以下治疗建议：</p>';
-            }
-            
-            // 添加模拟的治疗方案内容
-            plan += '<div class="plan-details">';
-            plan += '<h4>1. 治疗方案建议：</h4>';
-            plan += '<ul>';
-            plan += '<li>手术治疗：建议进行肿瘤切除手术，术后根据病理结果调整方案</li>';
-            plan += '<li>化疗方案：推荐使用标准化疗方案，每3周为一个疗程</li>';
-            plan += '<li>放疗考虑：根据肿瘤分期和位置，评估是否需要辅助放疗</li>';
-            plan += '<li>靶向治疗：建议进行基因检测，评估靶向治疗可行性</li>';
-            plan += '</ul>';
-            
-            plan += '<h4>2. 随访建议：</h4>';
-            plan += '<ul>';
-            plan += '<li>治疗期间每2周进行一次血常规检查</li>';
-            plan += '<li>治疗结束后每月进行一次影像学复查</li>';
-            plan += '<li>长期随访：每3-6个月进行一次全面检查</li>';
-            plan += '</ul>';
-            
-            plan += '<h4>3. 生活方式建议：</h4>';
-            plan += '<ul>';
-            plan += '<li>保持均衡饮食，增加蛋白质和维生素摄入</li>';
-            plan += '<li>适当进行体育锻炼，避免过度劳累</li>';
-            plan += '<li>保持良好心态，积极配合治疗</li>';
-            plan += '</ul>';
-            
-            plan += '<p class="disclaimer">* 以上为模拟分析结果，仅供参考。具体治疗方案请以临床医生建议为准。</p>';
-            plan += '</div>';
-            
-            return plan;
-        }
+            agentDebateSection.style.display = 'block';
+            agentDebatePre.textContent = '加载中...';
+            const urlTemplate = "{{ url_for('run_agent_analysis_api', diagnosis_id=0) }}";
+            const baseUrl = urlTemplate.replace('0', lastDiagnosisId);
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'strategy=debate&trace=1';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  if (!data.success) {
+                      agentDebatePre.textContent = data.message || '加载 Debate 失败';
+                      return;
+                  }
+                  const result = data.data || {};
+                  const trace = result.debate_trace || null;
+                  if (!trace) {
+                      agentDebatePre.textContent = '暂无多专家博弈过程（请确认已启用 multi-agent 且策略为 debate）';
+                      return;
+                  }
+                  agentDebatePre.textContent = JSON.stringify(trace, null, 2);
+              }).catch(err => {
+                  agentDebatePre.textContent = '请求 Debate 时发生错误';
+              });
+        });
     </script>
-
-    <!-- 模态窗口的CSS样式 -->
     <style>
         /* 模态窗口样式 */
         .modal {

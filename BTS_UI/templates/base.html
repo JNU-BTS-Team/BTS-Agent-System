@@ -21,11 +21,9 @@
                 <li class="nav-item {% if request.endpoint=='patients' %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('patients') }}">病人管理</a>
                 </li>
-                {% if current_user.role == 'admin' %}
                 <li class="nav-item {% if request.endpoint=='doctors' %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('doctors') }}">医生管理</a>
                 </li>
-                {% endif %}
                 <li class="nav-item {% if request.endpoint=='todos' %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('todos') }}">今日待办</a>
                 </li>

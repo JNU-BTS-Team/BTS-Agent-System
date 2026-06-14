@@ -6,7 +6,9 @@
     <div class="container">
         <div class="management-card">
             <h1>医生管理</h1>
-            <a href="{{ url_for('add_doctor') }}" class="btn btn-primary mb-3">添加新医生</a>
+            {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('add_doctor') }}" class="btn btn-primary mb-3">添加新医生</a>
+            {% endif %}
             
             <!-- 搜索表单 -->
             <form method="GET" action="{{ url_for('doctors') }}" class="mb-3">
@@ -30,24 +32,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for doctor in doctors %}
-                        <tr>
-                            <td>{{ doctor.id }}</td>
-                            <td>{{ doctor.username }}</td>
-                            <td>{{ doctor.real_name }}</td>
-                            <td>{{ doctor.department }}</td>
-                            <td>{{ doctor.title }}</td>
-                            <td>{{ doctor.phone }}</td>
-                            <td>
-                                {% if current_user.role == 'admin' %}
-                                    <a href="{{ url_for('edit_doctor', doctor_id=doctor.id) }}" class="btn btn-edit btn-sm">修改</a>
-                                    <form method="POST" action="{{ url_for('delete_doctor', doctor_id=doctor.id) }}" style="display: inline;">
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除这个医生吗？')">删除</button>
-                                    </form>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
+                        {% if doctors %}
+                            {% for doctor in doctors %}
+                            <tr>
+                                <td>{{ doctor.id }}</td>
+                                <td>{{ doctor.username }}</td>
+                                <td>{{ doctor.real_name }}</td>
+                                <td>{{ doctor.department }}</td>
+                                <td>{{ doctor.title }}</td>
+                                <td>{{ doctor.phone }}</td>
+                                <td>
+                                    {% if current_user.role == 'admin' %}
+                                        <a href="{{ url_for('edit_doctor', doctor_id=doctor.id) }}" class="btn btn-edit btn-sm">修改</a>
+                                        <form method="POST" action="{{ url_for('delete_doctor', doctor_id=doctor.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除这个医生吗？')">删除</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" style="text-align: center;">无符合搜索结果</td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
