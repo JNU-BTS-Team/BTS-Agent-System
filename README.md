@@ -1,229 +1,331 @@
-# BTS Agent System
+# 🧠 BTS-Agent：脑肿瘤诊断病例管理系统
 
-**A Flask‑based tumor case management and remote testing platform**
+**BTS-Agent: Brain Tumor Diagnosis Case Management System**
 
-本项目面向 `Computer Design Competition 2026`，构建了一套
-集成化的后台平台，用于肿瘤病例的管理、远程算法评估与运行结果的
-可视化分析。系统不仅支持患者与医生信息、诊断记录的CRUD操作，
-还通过 Web 界面接收 `.nii` 格式的影像数据，借助 SSH 与服务器
-交互完成模型推理。远程生成的分割/预测图像会回传并嵌入页面，
-后续还可接入经过微调的深度模型对输出进行自动化后处理与智能
-建议，助力临床决策与科研验证。
+> 一个集医学影像诊断、多代理智能分析、患者病例管理于一体的脑肿瘤诊疗支持系统
 
 ---
 
+## 📖 项目简介
 
-### Chapter1 Git 常用命令速查（本地 ↔ GitHub）
+本项目是一个集医学影像诊断、多代理智能分析、患者病例管理于一体的脑肿瘤诊疗支持系统。系统采用前后端分离架构，包含 **BTS_UI 主诊疗界面**和 **BTS_UI_DLC 数据管理模块**，支持医生团队协作、患者信息管理、诊断记录追踪等功能，并集成了多智能体辩论融合（Multi-Agent Debate Fusion）的诊断决策支持。
 
-> 进入项目目录后再执行下面命令：
->
-> ```bash
-> cd "F:\Undergraduate_Competitions\Computer_Design_Competition\code\BTS_Agent_System" # 本地的项目代码文件夹
-> ```
->
-> 1) 查看当前状态（最常用）
-> ```bash
-> git status              # 看哪些文件被修改/新增、是否已暂存、当前在哪个分支。
-> git remote -v           # 查看已连接的远程仓库
-> ```
+### ✨ 核心功能
 
-2) 查看当前分支 & 远程仓库地址
-git branch
-git branch -a
-
-3) 从 GitHub 拉取最新代码（更新到本地）
-git pull
-建议：每次开始写代码前先 git pull，避免冲突。0
-
-4) 提交并推送（把本地改动上传到 GitHub）
-4.1 暂存（选择一种）
-只提交某个文件：0
-git add README.md
-提交所有改动（常用）：
-git add .
-
-4.2 提交
-git commit -m "你的提交说明"
-
-4.3 推送到 GitHub
-git push
-如果是第一次推送、提示没有 upstream：
-main 分支：
-git push -u origin main
-
-
-5) 查看提交记录
-git log --oneline --decorate --graph -n 20
-
-6) 本地改乱了但还没提交：临时保存 / 恢复
-
-```bash
-# 6.1 临时保存改动（stash）
-git stash
-git pull
-git stash pop
-
-# 6.2 丢弃某个文件的本地修改（危险：不可恢复）
-git restore README.md
-
-# 6.3 丢弃全部未提交修改（危险：不可恢复）
-git restore .
-```
-
-7) 典型日常流程（推荐）
-从GitHub更新拉取代码：
-git pull
-或者
-git fetch upstream # 从主仓库同步更新
-git merge upstream/main
-
-查看git状态：
-git status
-暂存(add) + 提交(commit) + 推送(push)
-
-标准工作推送代码流程：
-🟢 日常开发
-git add .
-git commit -m "你的更新说明"
-git push origin main
-
-🔵 同步主仓库更新（非常重要）
-git fetch upstream
-git merge upstream/main
-# 这两和合并＝git pull
-或者更干净：
-git fetch upstream
-git rebase upstream/main
-git push origin main
-
-
-
-### Chapter2 三种仓库 & 各自分支结构 重要！！！！！！！
-
-# ===============================
-# 1️⃣ 组织远程仓库（upstream）
-# ===============================
-# 位置：BTS-JNU/BTS-Agent-System
-# 作用：团队最终代码
-
-upstream/main    # 稳定版本（发布）
-upstream/dev     # 团队开发分支
-
-
-# ===============================
-# 2️⃣ 个人远程仓库（origin）
-# ===============================
-# 位置：自己的GitHub账号/BTS-Agent-System
-# 作用：个人开发中转站
-
-origin/main          # 与 upstream/main 同步
-origin/dev           # 与 upstream/dev 同步
-origin/feature-xxx   # 个人功能分支
-
-
-# ===============================
-# 3️⃣ 个人本地仓库（Local）
-# ===============================
-# 位置：自己电脑
-# 作用：实际写代码的地方
-
-main                 # 本地主分支
-dev                  # 本地开发分支
-feature-xxx          # 本地功能分支
-
-
-
-### Chapter3 团队协作标准流程（Fork + dev 分支） 非常重要！！！！！！！
-
-## 结构说明
-- upstream = 组织远程仓库
-- origin = 个人远程仓库
-- dev = 团队开发分支
-- feature = 个人功能分支
-
-# ===============================
-# 0、首先点一下fork到自己的个人仓库中
-# ===============================
-
-
-# ===============================
-# 一、开始开发前（同步 dev）
-# ===============================
-
-```bash
-# 1. 切换到本地 dev 分支
-git checkout dev
-
-# 2. 从组织仓库下载最新代码（不修改当前代码）
-git fetch upstream
-
-# 3. 合并组织仓库的 dev 到本地 dev
-git merge upstream/dev
-
-# 4. 将更新后的 dev 推送到个人仓库
-git push origin dev
-
-# 5. 创建个人功能分支（不要在 dev 上直接开发）
-git checkout -b feature-xxx
-```
-
-
-# ===============================
-# 二、开发完成后
-# ===============================
-
-# 6. 添加修改
-git add . # 作用在当前所在分支/个人本地仓库 （git branch可知）
-
-# 7. 提交到本地功能分支
-git commit -m "中文说明" # 作用在当前所在分支/个人本地仓库 （git branch可知）
-
-# 8. 推送到个人仓库
-git push origin feature-xxx # 作用在当前分支/个人本地仓库 → 远程对应分支/个人远程仓库
-
-# 9. 在 GitHub 发起 PR：
-#    feature-xxx  →  upstream/dev
-
-
-# ===============================
-# 三、PR 合并成功后
-# ===============================
-
-# 10. 切回本地 dev
-git checkout dev
-
-# 11. 同步组织仓库最新 dev
-git fetch upstream
-git merge upstream/dev
-
-# 12. 更新个人仓库 dev
-git push origin dev
-
-# 13. 删除本地功能分支
-git branch -d feature-xxx
-
-# 14. 删除远程功能分支
+- 🏥 **患者诊疗管理** - 患者信息注册、诊断记录管理、医学影像处理
+- 🤖 **AI 辅助诊断** - 多智能体辩论融合、DeepSeek LLM 推理
+- 👨‍⚕️ **医生团队协作** - 医生权限管理、诊断分工、团队统计
+- 🔐 **权限安全控制** - 细粒度访问控制、敏感信息脱敏、视图保护
+- 📊 **数据可视化** - 诊断统计、工作量分析、趋势展示
 
 ---
 
-## 远程测试与数据上传 ⚙️
+## 🚀 快速启动
 
-1. 在系统导航栏点击“测试功能”进入远程服务器测试页面。
-2. 在页面顶部先选择要上传的序列类型（FLAIR、T1、T1ce、T2），至少选一种。
-3. 拖放或点击上传对应数量的 `.nii` 文件（文件数必须等于选中的类型数）。
-   - 如果文件数缺少会提示“请继续输入文件”，多余则提示“当前上传文件数目过多”。
-4. 上传按钮成功后右侧显示绿色“上传成功”，同时“开始测试”按钮被激活。
-5. 必须先上传数据才能点击“开始测试”，否则页面会显示“远程Uploads目录没有nii文件，请先上传”。
-6. 后端会通过 SSH 将上传的 `.nii` 文件发送到远程服务器的
-   `/data/WPW/BTS-Agent-Sys/BTS/Uploads/Brats18_TCIA01_1_1/`，测试脚本运行时会使用这些数据。
-7. 上传和测试均需登录用户权限。
+### 1️⃣ 环境要求
 
-上传测试也已包含在自动页面访问脚本中，脚本会验证接口是否能返回错误提示。
-
-```bash
-# 清理分支示例
-git push origin --delete feature-xxx
+```
+✓ Windows 10/11 或 Linux
+✓ Python 3.8+
+✓ MySQL 5.7+
+✓ 现代浏览器 (Chrome/Firefox/Edge)
 ```
 
+### 2️⃣ 数据库准备
 
+#### 启动 MySQL 服务
+```bash
+# Windows - 按 Win + R，输入以下命令
+services.msc
 
+# 或在 PowerShell 中运行
+net start MySQL80
+```
+
+#### 导入数据库
+```bash
+# 进入数据库文件目录
+cd BTS-Agent-System/only_sql_bench
+
+# 依次执行初始化脚本
+mysql -u root -p < 01_CREATE_DATABASE_AND_TABLES.sql
+mysql -u root -p < 02_INSERT_INITIAL_DATA.sql
+mysql -u root -p < 07_GRANT_PERMISSIONS.sql
+```
+
+#### 验证连接
+```bash
+mysql -u root -p
+# 输入密码后，如果出现 mysql> 提示符即连接成功
+```
+
+### 3️⃣ 系统运行
+
+在项目根目录打开 **PowerShell** 或 **CMD**，执行以下命令：
+
+#### 方式一：使用启动脚本（推荐）✨
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start_app.ps1
+```
+
+#### 方式二：手动启动
+```powershell
+# 启动模块一：主诊疗系统（端口 5000）
+python BTS-Agent-System/BTS_UI/app.py
+
+# 新开一个终端，启动模块二：数据管理系统（端口 5001）
+python BTS-Agent-System/BTS_UI_DLC/app.py
+```
+
+### 4️⃣ 访问系统
+
+在浏览器中打开以下地址：
+
+| 系统模块 | 访问地址 | 描述 |
+|---------|---------|------|
+| 🔗 **主诊疗系统** | [http://127.0.0.1:5000/login](http://127.0.0.1:5000/login) | 患者诊断、AI 分析 |
+| 🔗 **数据管理系统** | [http://127.0.0.1:5001/login](http://127.0.0.1:5001/login) | 医生团队、权限管理 |
+
+### 5️⃣ 默认账户
+
+```
+👤 管理员账户
+  用户名: admin
+  密码: admin123
+
+👨‍⚕️ 医生账户
+  用户名: doctor1
+  密码: doctor123
+
+👁️ 审计员账户
+  用户名: viewer
+  密码: viewer123
+```
+
+---
+
+## ⚙️ 环境变量配置
+
+### 模块一：BTS_UI 主诊疗系统
+
+```powershell
+# MySQL 数据库配置
+$env:MYSQL_HOST="localhost"
+$env:MYSQL_USER="root"
+$env:MYSQL_PASSWORD="修改为你的密码"
+$env:MYSQL_DB="SECD"
+
+# Flask Web 服务器配置
+$env:FLASK_HOST="127.0.0.1"
+$env:FLASK_PORT="5000"
+$env:FLASK_DEBUG="0"
+
+# 多智能体诊断系统配置
+$env:MULTI_AGENT_STRATEGY="debate"     # debate / voting / confidence_fusion
+$env:DEEPSEEK_API_KEY="你的API"
+$env:DEEPSEEK_BASE_URL="你使用的URL"
+$env:BTS_SSO_SECRET="bts_sso_demo"     # SSO 单点登录密钥
+```
+
+### 模块二：BTS_UI_DLC 数据管理系统
+
+```powershell
+# MySQL 数据库配置
+$env:DLC_MYSQL_HOST="localhost"
+$env:DLC_MYSQL_USER="root"
+$env:DLC_MYSQL_PASSWORD="修改为你的密码"
+$env:DLC_MYSQL_DB="SECD2"
+
+# Flask 运行端口
+$env:FLASK_RUN_PORT="5001"
+
+# 远程执行配置（可选）
+$env:REMOTE_HOST="10.125.125.2"
+$env:REMOTE_PORT="22"
+$env:REMOTE_USERNAME="your_username"
+$env:REMOTE_PASSWORD="your_password"
+```
+
+---
+
+## 📂 项目结构
+
+```
+BTS-Agent/
+├── BTS-Agent-System/
+│   ├── BTS_UI/                          # 主诊疗系统
+│   │   ├── app.py                       # Flask 主应用
+│   │   ├── init_db.sql                  # 数据库初始化
+│   │   ├── templates/                   # HTML 模板
+│   │   ├── static/                      # CSS/JS 静态资源
+│   │   └── Multi-Agent/                 # 多智能体诊断模块
+│   │
+│   ├── BTS_UI_DLC/                      # 数据管理系统
+│   │   ├── app.py                       # Flask 数据管理应用
+│   │   ├── templates/                   # 管理界面模板
+│   │   └── static/                      # 管理界面资源
+│   │
+│   └── only_sql_bench/                  # 数据库脚本
+│       ├── 01_CREATE_DATABASE_AND_TABLES.sql
+│       ├── 02_INSERT_INITIAL_DATA.sql
+│       ├── 04_VIEW_PROTECTION.sql       # 视图脱敏
+│       └── 07_GRANT_PERMISSIONS.sql     # 权限管理
+│
+├── start_app.ps1                        # Windows 启动脚本
+├── start_both.ps1                       # 批量启动脚本
+├── README.md                            # 本文件
+└── QUICKSTART.md                        # 快速入门指南
+```
+
+---
+
+## 🏗️ 系统架构
+
+### 模块划分
+
+| 模块 | 功能 | 端口 | 数据库 |
+|------|------|------|--------|
+| **BTS_UI** | 患者诊疗、AI 辅助分析、影像展示 | 5000 | SECD |
+| **BTS_UI_DLC** | 医生团队管理、诊断记录、权限控制 | 5001 | SECD2 |
+
+### 技术栈
+
+```
+🎨 前端：HTML5 + CSS3 + Vanilla JavaScript
+🔧 后端：Python Flask
+💾 数据库：MySQL 5.7+
+🤖 AI：DeepSeek LLM + Multi-Agent Debate
+🔐 认证：Flask-Login + Session
+📡 通信：JSON + Fetch API
+```
+
+---
+
+## 🔐 权限管理体系
+
+### 用户角色与权限
+
+| 角色 | 权限范围 | 可操作功能 |
+|------|---------|---------|
+| **管理员** (admin) | ✅ 全部 | 创建/编辑/删除医生、患者、诊断记录 |
+| **医生** (doctor) | ✅ 受限 | 查看患者、创建诊断、无删除权限 |
+| **审计员** (viewer) | ✅ 只读 | 仅查看患者和诊断信息 |
+
+### 数据脱敏策略
+
+- 📛 **姓名脱敏**：王** （只显示首字）
+- 📞 **电话脱敏**：139****7919 （首尾可见）
+- 🎂 **出生日期脱敏**：1990-** （只显示年份）
+- 🏠 **住址脱敏**：北京市朝** （只显示前5个字符）
+
+---
+
+## 📖 常见问题
+
+### ❓ 启动时出现数据库连接错误
+
+**原因**：MySQL 服务未启动或密码错误
+
+**解决**：
+```powershell
+# 1. 启动 MySQL 服务
+net start MySQL80
+
+# 2. 验证连接
+mysql -u root -p
+# 输入密码："你的密码"
+
+# 3. 检查环境变量是否正确设置
+echo $env:MYSQL_PASSWORD
+```
+
+### ❓ 端口 5000 已被占用
+
+**原因**：之前的 Flask 实例未正常关闭
+
+**解决**：
+```powershell
+# 查找占用端口的进程
+netstat -ano | findstr :5000
+
+# 关闭进程（PID 为上面查询到的进程ID）
+taskkill /PID <PID> /F
+
+# 重新启动
+python BTS-Agent-System/BTS_UI/app.py
+```
+
+### ❓ 页面无法加载或样式混乱
+
+**原因**：浏览器缓存或静态资源未加载
+
+**解决**：
+```
+1. 按 Ctrl + Shift + Delete 清除浏览器缓存
+2. 或按 Ctrl + Shift + R 强制刷新
+3. 检查浏览器控制台（F12）是否有错误信息
+```
+
+---
+
+## 📚 文档参考
+
+- 📖 [快速入门指南](./QUICKSTART.md) - 5 分钟上手
+- 🔐 [权限管理文档](./BTS-Agent-System/4.1_USER_PERMISSION_COMPLETE.md) - 用户权限系统说明
+- 👁️ [视图保护文档](./BTS-Agent-System/4.2_VIEW_PROTECTION_GUIDE.md) - 数据脱敏与隐私保护
+- ⚡ [API 接口文档](./BTS-Agent-System/API_REFERENCE.md) - 系统 API 调用
+
+---
+
+## 🛠️ 故障排查
+
+### 日志查看
+
+```powershell
+# 查看 Flask 日志
+python BTS-Agent-System/BTS_UI/app.py 2>&1 | Tee-Object -FilePath "debug.log"
+
+# 查看数据库错误
+mysql -u root -p
+> SHOW ERRORS;
+```
+
+### 数据库检查
+
+```sql
+-- 检查用户权限
+SHOW GRANTS FOR 'root'@'localhost';
+
+-- 查看所有数据库
+SHOW DATABASES;
+
+-- 查看表结构
+DESC SECD.users;
+DESC SECD.patients;
+```
+
+---
+
+## 👥 项目成员
+
+- 🧑‍💼 项目负责人：吴佩威
+---
+
+## 📄 许可证
+
+本项目仅供教学使用，禁止商业用途。
+
+---
+
+## 📞 技术支持
+
+如有问题或建议，请联系项目负责人或提交 Issue。
+
+```
+最后更新：2026-06-14
+版本：v1.0.0
+```
+
+---
+
+**🚀 祝你使用愉快！**
